@@ -8,7 +8,6 @@ class EvalDataset(torch_data.Dataset):
         self.maxlen = 512
         data = container.get_data()
         self.samples = self._get_samples(data)
-        self.tokenizer = transformers.AutoTokenizer.from_pretrained(mname)
 
 
     def _get_samples(self, data):

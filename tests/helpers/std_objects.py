@@ -1,9 +1,11 @@
 from modeling.train import Trainer
 from modeling.transformer_qanda import TransformerQA
 from modeling.evaluating import Validator
+from modeling.managing_model import ModelManager
 from data.contain import DataContainer
 from data.loaders_creation import DataLoaderSepXYCreator
 from data.datasets import TrainDataset, EvalDataset
+from data.processors import QADataProcessor
 from .config import TestsConfig
 config = TestsConfig()
 
@@ -16,8 +18,8 @@ def get_trainer(model=None, **trainer_kwargs):
     trainer = Trainer(model, validator, device, **trainer_kwargs)
     return trainer
 
-def get_model():
-    model = TransformerQA(mname=config.model_name)
+def get_model(**model_kwargs):
+    model = TransformerQA(mname=config.model_name, **model_kwargs)
     return model
 
 
@@ -49,3 +51,10 @@ def get_loader(dataset=None):
         dataset = get_train_dataset()
 
     return DataLoaderSepXYCreator(dataset, config.batch_size).get()
+
+def get_model_manager(model=None):
+    if model is None:
+        model = get_model()
+    data_processor = QADataProcessor("DeepPavlov/rubert-base-cased")
+    
+    return ModelManager(model, data_processor)

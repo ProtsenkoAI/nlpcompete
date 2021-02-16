@@ -4,9 +4,9 @@ import torch.nn as nn
 import torch
 from torch.cuda.amp import autocast, GradScaler
 import torch.optim as optim
+import transformers
 
 from tqdm import tqdm
-import transformers
 
 
 class Trainer:
@@ -83,7 +83,7 @@ class Trainer:
         inputs, (start_labels, end_labels) = self._xy2device(inputs, start_labels, end_labels)
         
         with autocast(enabled=self.use_amp):
-            start_probs, end_probs = self.model(*inputs)
+            start_probs, end_probs = self.model(inputs)
             loss_start = self.criterion(start_probs, start_labels)
             loss_end = self.criterion(end_probs, end_labels)
             loss = (loss_start + loss_end) / 2

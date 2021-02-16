@@ -3,6 +3,7 @@ import torch
 
 class DataLoaderSepXYCreator:
     # TODO: change logic of working with loaders in whole project
+    # TODO: don't convert to tensor, move this functionality to models' managers
     def __init__(self, dataset, batch):
         self.dataset = dataset
         self.has_answers = self.dataset.has_answers

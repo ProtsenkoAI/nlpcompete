@@ -22,7 +22,7 @@ class TransformerQA(nn.Module):
         config = model.config.to_dict()
         return config["hidden_size"]
 
-    def forward(self, *transformer_inputs):
+    def forward(self, transformer_inputs):
         x = self.transformer(*transformer_inputs)
         x = x["pooler_output"]
         x = self.head(x)
@@ -31,18 +31,6 @@ class TransformerQA(nn.Module):
         start_logits = start_logits.squeeze(-1)
         end_logits = end_logits.squeeze(-1)
         return start_logits, end_logits
-
-    def predict_start_end_idx(self, *inps):
-        with torch.no_grad():
-            x = self.transformer(*inps)
-            x = x["pooler_output"]
-            x = self.head(x)
-
-        start_probs = x[:, 0]
-        end_probs = x[:, 1]
-        start_argmax = torch.argmax(start_probs)
-        end_argmax = torch.argmax(end_probs)
-        return int(start_argmax), int(end_argmax)
 
     def _create_head(self, droprate, n_layers, head_nneurons):
         head_layers = []
