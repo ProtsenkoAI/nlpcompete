@@ -10,11 +10,11 @@ class QADataProcessor:
         self.maxlen = 512
 
     def preprocess_features_and_labels(self, features, labels, device=None):
-        print("sources in preprocess_features_and_labels", "features", features, "labels", labels)
+        # print("sources in preprocess_features_and_labels", "features", features, "labels", labels)
         tokenized = self._tokenize(*features)
-        print("tokenized", tokenized)
+        # print("tokenized", tokenized)
         labels_in_token_format = self._token_idxs_from_char_idxs(labels, tokenized)
-        print("labels in token", labels_in_token_format)
+        # print("labels in token", labels_in_token_format)
         features = self._features_from_tokenized(tokenized, device)
         labels_proc = self._preproc_labels(labels_in_token_format, device)
         return features, labels_proc
@@ -36,15 +36,16 @@ class QADataProcessor:
     #     return labels_proc
 
     def postprocess_preds(self, preds):
-        print("starting postrpocess_preds. Preds:", preds)
         start_logits, end_logits = preds
-        print("start logits shape", start_logits.shape)
         start_argmax = torch.argmax(start_logits, dim=-1)
-        print("start argmax shape:", start_argmax.shape)
-        end_argmax = torch.argmax(end_logits, dim=-1)
+        end_argmax = torch.argmax(end_logits, dim=-1) + 1
         conved = start_argmax.cpu().detach().numpy(), end_argmax.cpu().detach().numpy()
-        print("conved shape", conved[0].shape)
-        return conved
+        conved_grouped_by_sample = list(zip(*conved))
+        return conved_grouped_by_sample
+
+    def postprocess_labels(self, labels):
+        start, end = labels
+        return start.cpu().detach().numpy(), end.cpu().detach().numpy()
 
     def _tokenize(self, *texts):
         encoded = self.tokenizer(*texts,
@@ -63,8 +64,10 @@ class QADataProcessor:
         for start_idx, end_idx, text_positions in zip(start_chars, end_chars, tokens_positions):
             text_token_starts, text_token_ends = zip(*text_positions)
             if end_idx <= max(text_token_ends):
-                token_start = text_token_starts.index(start_idx)
-                token_end = text_token_ends.index(end_idx)
+                nearest_start = min(text_token_starts, key=lambda x:abs(x-start_idx))
+                nearest_end = min(text_token_ends, key=lambda x:abs(x-end_idx))
+                token_start = text_token_starts.index(nearest_start)
+                token_end = text_token_ends.index(nearest_end)
             else:
                 # answer not in context
                 token_start, token_end = 0, 0 # TODO: fix it filtering samples like these

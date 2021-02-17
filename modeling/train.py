@@ -59,8 +59,6 @@ class Trainer:
             print(f"Epoch: {epoch}")
             self.train_one_epoch(train, test, lr_scheduler)
 
-        return self.model
-
     def train_one_epoch(self, train, test, lr_scheduler):
         self.manager.get_model().train()
         losses = []
@@ -88,7 +86,7 @@ class Trainer:
             preds, labels = self.manager.preproc_forward_labeled(inputs, labels)
             start_labels, end_labels = labels
             start_probs, end_probs = preds
-            print("preds, labels", preds, labels)
+            # print("preds, labels", preds, labels)
             loss_start = self.criterion(start_probs, start_labels)
             loss_end = self.criterion(end_probs, end_labels)
             loss = (loss_start + loss_end) / 2

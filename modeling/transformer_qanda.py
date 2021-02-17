@@ -24,12 +24,12 @@ class TransformerQA(nn.Module):
         return config["hidden_size"]
 
     def forward(self, transformer_inputs):
-        print("input of model", transformer_inputs)
+        # print("input of model", transformer_inputs)
         x = self.transformer(*transformer_inputs)
         x = x["last_hidden_state"] # be attentive: last_hidden_state isn't used for classification
-        print("x before head", x.shape)
+        # print("x before head", x.shape)
         x = self.head(x)
-        print("x after head", x.shape)
+        # print("x after head", x.shape)
 
         start_logits, end_logits = x.split(1, dim=-1)
         start_logits = start_logits.squeeze(-1)

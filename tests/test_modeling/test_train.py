@@ -29,7 +29,7 @@ class TestTrainer(unittest.TestCase):
         old_weights = weights_helpers.get_weights(shared_objs.model)
         shared_objs.trainer.fit(train_loader, val_loader)
         eval_vals = shared_objs.trainer.get_eval_vals()
-        self.assertGreater(eval_vals, 0, "validation was not conducted during training")
+        self.assertGreater(len(eval_vals), 0, "validation was not conducted during training")
         new_weights = weights_helpers.get_weights(shared_objs.model)
 
         weights_equal = weights_helpers.check_weights_equal(old_weights, new_weights)

@@ -40,18 +40,18 @@ class ModelManager:
 
     def predict_postproc(self, features):
         preds = self.preproc_forward(features)
-        print("src preds shape", preds[0].shape, preds[1].shape)
+        # print("src preds shape", preds[0].shape, preds[1].shape)
         processed_out = self.processor.postprocess_preds(preds)
-        print("process out", processed_out)
-        start_end_batches = list(zip(*processed_out))
-        print("then", start_end_batches)
-        return start_end_batches
+        # print("process out", processed_out)
+        # print("then", start_end_batches)
+        return processed_out
 
     def predict_postproc_labeled(self, features, labels):
         preds, labels_proc = self.preproc_forward_labeled(features, labels)
         process_preds = self.processor.postprocess_preds(preds)
-        labels_start_end = list(zip(*labels_proc))
-        return labels_start_end
+        non_tensor_labels = self.processor.postprocess_labels(labels_proc)
+        labels_start_end = list(zip(*non_tensor_labels))
+        return process_preds, labels_start_end
 
 
     def save_model(self):

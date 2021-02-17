@@ -46,10 +46,8 @@ class TestModelManager(unittest.TestCase):
         answer_start_end_idxs = shared_objs.mod_manager.predict_postproc(
                                                         shared_objs.features
                                                         )
-        start_idx, end_idx = answer_start_end_idxs
-        print("Postproc preds", start_idx, end_idx)
-        self.assertEqual(len(start_idx), shared_objs.batch_size)
-        self.assertEqual(len(end_idx), shared_objs.batch_size)
+        print("postproc res", answer_start_end_idxs)
+        self.assertEqual(len(answer_start_end_idxs), shared_objs.batch_size)
 
     def test_save_then_load(self):
         model_name = shared_objs.mod_manager.save_model()

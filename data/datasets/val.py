@@ -23,10 +23,13 @@ class EvalDataset(torch_data.Dataset):
         return samples
 
     def __getitem__(self, idx):
+        # TODO: at the moment I hardcoded val dataset to return first of valid answers
+        # because otherwise implemented DataLoaderSepXYCreator breaks on splitting labels.
+        # It's not a big problem because only 3 samples in train have multiple answers.
         sample = self.samples[idx]
         features = (sample["text"], sample["question"])
         if self.has_answers:
-            return features, sample["valid_answers"]
+            return features, sample["valid_answers"][0]
         return features
         
     def __len__(self):
