@@ -11,11 +11,10 @@ config = TestsConfig()
 
 
 def get_trainer(model=None, **trainer_kwargs):
-    if model is None:
-        model = get_model()
+    manager = get_model_manager(model)
     validator = get_validator()
-    device = config.device
-    trainer = Trainer(model, validator, device, **trainer_kwargs)
+
+    trainer = Trainer(manager, validator, **trainer_kwargs)
     return trainer
 
 def get_model(**model_kwargs):
@@ -27,17 +26,17 @@ def get_validator():
     return Validator()
 
 
-def get_container():
-    return DataContainer(config.train_path, nrows=10)
+def get_container(nrows=10):
+    return DataContainer(config.train_path, nrows=nrows)
 
 
-def get_train_dataset():
-    container = get_container()
+def get_train_dataset(nrows=10):
+    container = get_container(nrows=nrows)
     return TrainDataset(container, config.model_name)
     
 
-def get_val_dataset():
-    container = get_container()
+def get_val_dataset(nrows=10):
+    container = get_container(nrows=nrows)
     return EvalDataset(container, config.model_name, has_answers=True)
 
 
@@ -52,9 +51,12 @@ def get_loader(dataset=None):
 
     return DataLoaderSepXYCreator(dataset, config.batch_size).get()
 
-def get_model_manager(model=None):
+def get_qa_processor(mname="DeepPavlov/rubert-base-cased"):
+    return QADataProcessor(mname)
+
+def get_model_manager(model=None, **kwargs):
     if model is None:
         model = get_model()
-    data_processor = QADataProcessor("DeepPavlov/rubert-base-cased")
+    data_processor = get_qa_processor()
     
-    return ModelManager(model, data_processor)
+    return ModelManager(model, data_processor, **kwargs)

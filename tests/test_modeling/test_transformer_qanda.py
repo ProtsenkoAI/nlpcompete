@@ -18,16 +18,23 @@ class SharedObjects:
     """The class is used to speed up testing"""
     def __init__(self):
         self.model = std_objects.get_model()
-        self.loader = std_objects.get_loader()
+        loader = std_objects.get_loader()
+        processor = std_objects.get_qa_processor()
+        features_unproc, labels_unproc = next(iter(loader))
+        # self.features = processor.preprocess_features(features_unproc)
+        # self.labels = processor.preprocess_labels(labels_unproc)
+        self.features, self.labels = processor.preprocess_features_and_labels(features_unproc, labels_unproc)
+
 
 shared_objs = SharedObjects()
 
 
 class TestTransformerQA(unittest.TestCase):
     def test_forward(self):
-        features, (start_labels, end_labels) = next(iter(shared_objs.loader))
-        start_logits, end_logits = shared_objs.model(features)
+        start_logits, end_logits = shared_objs.model(shared_objs.features)
+        start_labels, end_labels = shared_objs.labels
         self.assertEqual(len(start_labels), len(start_logits))
+        self.assertGreaterEqual(start_logits.ndim, 2, "preds have to have at least 2 dims: batch and token")
 
     def test_reset_weights(self):
         transformer_weights_before = weights_helpers.get_weights(shared_objs.model.get_transformer())

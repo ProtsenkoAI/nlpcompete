@@ -4,35 +4,34 @@ from tqdm.notebook import tqdm
 
 class Validator:
     def __init__(self):
-        self.main_metric = "f1"
-        self.metrics = {"f1": f1_score, "em": self._em_score}
+        # TODO: metrics are hardcoded now, maybe later we'll need to get them in arguments  
+        # TODO: add multiple metrics
+        self.metric = f1_score
 
-    def eval(self, model, test):
-        model.eval()
-        preds, labels = self._pred_all_batches(model, test)
-
-        eval_vals = {}
-        for name, metric_func in self.metrics:
-            metric_val = metric_func(preds, labels)
-            eval_vals[name] = metric_val
+    def eval(self, manager, test):
+        print("starting to evaludate")
+        manager.get_model().eval()
+        preds, labels = self._pred_all_batches(manager, test)
+        print("preds and labels", preds, labels)
+        metric_val = self.metric(preds, labels)
 
         print(f"Example of eval probs: {preds[:20]}")
         print("Eval value:", metric_val)
-        return eval_vals
+        return metric_val
 
-    def _pred_all_batches(self, model, test):
+    def _pred_all_batches(self, manager, test):
         all_preds = []
         all_labels = []
         for batch in tqdm(test, desc="eval"):
-            features, labels = batch
-            pred_classes = model.predict_classes(features, labels)
+            features, labels_unproc = batch
+            preds, labels = manager.predict_postproc_labeled(features, labels_unproc)
 
-            all_preds += list(pred_classes)
-            all_labels += list(labels.cpu())
-        
+            all_preds += list(preds)
+            all_labels += list(labels)
+        print("all_preds", all_preds)
+        print("all_labels", all_labels  )
         return all_preds, all_labels
         
 
-    def _em_score(self, preds, correct_answers):
-        raise NotImplementedError
-    
+    # def _em_score(self, preds, correct_answers):
+    #     raise NotImplementedError

@@ -6,8 +6,9 @@ import torch
 
 class TransformerQA(nn.Module):
     # TODO: (architecture) make transformer model to be a composition of transformer and head
+    # TODO: move cahce_dir to google drive to prevent downloading of the weights every session
     def __init__(self, mname, cache_dir="./cache_models/",
-                 droprate=0.3, head_nlayers=1, head_nneurons=30):
+                 droprate=0.3, head_nlayers=1, head_nneurons=768):
         super().__init__()
         self.mname = mname
         self.cache_dir = cache_dir
@@ -23,9 +24,12 @@ class TransformerQA(nn.Module):
         return config["hidden_size"]
 
     def forward(self, transformer_inputs):
+        print("input of model", transformer_inputs)
         x = self.transformer(*transformer_inputs)
-        x = x["pooler_output"]
+        x = x["last_hidden_state"] # be attentive: last_hidden_state isn't used for classification
+        print("x before head", x.shape)
         x = self.head(x)
+        print("x after head", x.shape)
 
         start_logits, end_logits = x.split(1, dim=-1)
         start_logits = start_logits.squeeze(-1)

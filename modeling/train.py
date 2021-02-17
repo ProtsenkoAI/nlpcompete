@@ -11,9 +11,10 @@ from tqdm import tqdm
 
 class Trainer:
     # TODO: move updating weights to separate component
-    def __init__(self, model, validator, device, use_pseudo_labeling=False, epochs=2, 
+    # TODO: manage answers out of scope (512 tokenss)
+    def __init__(self, model_manager, validator, use_pseudo_labeling=False, epochs=2, 
                  use_early_stopping=True, lr=2e-5, eval_steps=200, stopping_patience=2,
-                 weight_decay=1e-2, accum_iters=2, warmup=0, lr_end=1e-7, max_step=3000,
+                 weight_decay=1e-2, accum_iters=1, warmup=0, lr_end=1e-7, max_step=3000,
                  use_amp=False):
         self.use_pseudo_labeling = use_pseudo_labeling
         self.label_colname = "labels"
@@ -21,7 +22,6 @@ class Trainer:
         self.eval_steps = eval_steps
         self.validator = validator
         self.use_early_stopping = use_early_stopping
-        self.device = device
         self.accum_iters = accum_iters
         self.stopping_patience = stopping_patience
         self.warmup = warmup
@@ -32,14 +32,13 @@ class Trainer:
         self.eval_vals = []
         self.step_nb = 0
 
-        self.model = model
-        self.model.to(self.device)
+        self.manager = model_manager
+
         self._init_fitting_instruments(lr, weight_decay)
-        self.save_path = "./model_weights.pt"
 
     def _init_fitting_instruments(self, lr, weight_decay):
-        self.optimizer = optim.AdamW(self.model.parameters(), lr=lr, weight_decay=weight_decay)
-        self.criterion = nn.BCEWithLogitsLoss()
+        self.optimizer = optim.AdamW(self.manager.get_model().parameters(), lr=lr, weight_decay=weight_decay)
+        self.criterion = nn.CrossEntropyLoss()
         if self.use_amp:
             self.scaler = GradScaler() 
 
@@ -51,6 +50,7 @@ class Trainer:
                                                             lr_end=self.lr_end)
 
     def fit(self, train, test):
+        # TODO: reset weights when starting training
         lr_scheduler = self._init_scheduler(train)
         # self.model.reset_weights(self.device)
         for epoch in range(self.epochs):
@@ -62,7 +62,7 @@ class Trainer:
         return self.model
 
     def train_one_epoch(self, train, test, lr_scheduler):
-        self.model.train()
+        self.manager.get_model().train()
         losses = []
         for batch in tqdm(train, desc="batch in train"):
             if self.early_stopping():
@@ -75,15 +75,20 @@ class Trainer:
                 print(f"Step: {self.step_nb}")
                 print(f"Mean loss: {np.mean(losses)}")
                 losses = []
-                self.validator.eval(self.model, test)
+                eval_value = self.validator.eval(self.manager, test)
+                self.eval_vals.append(eval_value)
 
     def train_one_step(self, batch, lr_scheduler): # or split to x and y?
         inputs, labels = batch
-        start_labels, end_labels = labels
-        inputs, (start_labels, end_labels) = self._xy2device(inputs, start_labels, end_labels)
+        print("batch before processing", inputs, labels)
+        # start_labels, end_labels = self.manager.preproc_labels(labels)
         
         with autocast(enabled=self.use_amp):
-            start_probs, end_probs = self.model(inputs)
+            # start_probs, end_probs = self.manager.preproc_forward(inputs)
+            preds, labels = self.manager.preproc_forward_labeled(inputs, labels)
+            start_labels, end_labels = labels
+            start_probs, end_probs = preds
+            print("preds, labels", preds, labels)
             loss_start = self.criterion(start_probs, start_labels)
             loss_end = self.criterion(end_probs, end_labels)
             loss = (loss_start + loss_end) / 2
@@ -110,50 +115,6 @@ class Trainer:
             self.scaler.step(self.optimizer)
             self.scaler.update()
 
-    def _xy2device(self, inps, labels_start, labels_end):
-        inps_with_device = self._x2device(inps)
-        labels_with_device = labels_start.to(self.device), labels_end.to(self.device)
-        return inps_with_device, labels_with_device
-
-    def _x2device(self, inps):
-        new_inps = []
-        for elem in inps:
-            elem_with_device = elem.to(self.device)
-            new_inps.append(elem_with_device)
-
-        return new_inps
-
-    def evaluate(self, test):
-        self.model.eval()
-        all_preds = []
-        all_labels = []
-        for batch in tqdm(test, desc="eval"):
-            features, labels = batch
-            features, labels = self._xy2device(features, labels)
-            with torch.no_grad():
-                preds = self.predict(features)
-
-            pred_classes = (preds > self.class_threshold).float().cpu()
-            all_preds += list(pred_classes)
-            all_labels += list(labels.cpu())
-
-        eval_metric_val = self.eval_metric(all_preds, all_labels)
-
-        print(f"Example of eval probs: {preds.cpu().detach().numpy().flatten()}")
-        print("Eval value:", eval_metric_val)
-        self.eval_vals.append(eval_metric_val)
-        self._save_if_best()
-        return eval_metric_val
-        
-    def final_eval_res(self):
-        return max(self.eval_vals)
-
-    def predict(self, features):
-        new_inps = self._x2device(features)
-
-        logits = self.model.forward(*new_inps)
-        return torch.sigmoid(logits).squeeze(-1)
-
     def pseudo_labeling(self, ):
         raise NotImplementedError
 
@@ -171,7 +132,5 @@ class Trainer:
                 return True
         return False
 
-    def _save_if_best(self):
-        if self.eval_vals[-1] == max(self.eval_vals):
-            print(f"saving_model, path: {self.save_path}")
-            torch.save(self.model.state_dict(), self.save_path)
+    def get_eval_vals(self):
+        return self.eval_vals

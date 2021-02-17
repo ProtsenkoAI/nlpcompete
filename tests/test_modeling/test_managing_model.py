@@ -14,13 +14,13 @@ class SharedObjects:
 
         # loader = std_objects.get_loader()
         # self.features, self.labels = next(iter(loader))
-        batch_size = 4
-        self.features = (["lul it's context"] * batch_size,
-                         ["some question?"] * batch_size
+        self.batch_size = 4
+        self.features = (["lul it's context"] * self.batch_size,
+                         ["some question?"] * self.batch_size
                          )
-        self.labels = ([101] * batch_size,
-                       [202] * batch_size
-                       )
+        self.labels = ([101] * self.batch_size,
+                       [202] * self.batch_size
+                           )
 
 shared_objs = SharedObjects()
 
@@ -32,8 +32,9 @@ class TestModelManager(unittest.TestCase):
         self.assertIsInstance(end_preds, torch.Tensor)
         self.assertEqual(len(shared_objs.features[0]), len(start_preds))
 
-    def test_preproc_labels(self):
-        proc_start_idxs, proc_end_idxs = shared_objs.mod_manager.preproc_labels(shared_objs.labels)
+    def test_preproc_forward_labeled(self):
+        _, (proc_start_idxs, proc_end_idxs) = shared_objs.mod_manager.preproc_forward_labeled(shared_objs.features,
+                                                                                         shared_objs.labels)
 
         self.assertIsInstance(proc_start_idxs, torch.Tensor)
         self.assertIsInstance(proc_end_idxs, torch.Tensor)
@@ -46,8 +47,9 @@ class TestModelManager(unittest.TestCase):
                                                         shared_objs.features
                                                         )
         start_idx, end_idx = answer_start_end_idxs
-        self.assertIsInstance(start_idx, int)
-        self.assertIsInstance(end_idx, int)
+        print("Postproc preds", start_idx, end_idx)
+        self.assertEqual(len(start_idx), shared_objs.batch_size)
+        self.assertEqual(len(end_idx), shared_objs.batch_size)
 
     def test_save_then_load(self):
         model_name = shared_objs.mod_manager.save_model()
@@ -63,20 +65,33 @@ class TestModelManager(unittest.TestCase):
         self.assertIsInstance(model_name1, str)
         loaded_model1 = ModelManager.load_model(model_name1)
 
+        src_model1_weights = weights_helpers.get_weights(src_model1)
+        loaded_model1_weights = weights_helpers.get_weights(loaded_model1)
+        del src_model1, loaded_model1
+
         src_model2 = std_objects.get_model(head_nneurons=3)
         mod_manager2 = std_objects.get_model_manager(model=src_model2)
         model_name2 = mod_manager2.save_model()
+        del mod_manager2
         self.assertIsInstance(model_name2, str)
         loaded_model2 = ModelManager.load_model(model_name2)
 
-        self.assertTrue(self._check_models_weights_equal(src_model1, loaded_model1))
-        self.assertTrue(self._check_models_weights_equal(src_model2, loaded_model2))
-        self.assertFalse(self._check_models_weights_equal(loaded_model1, loaded_model2))
+        src_model2_weights = weights_helpers.get_weights(src_model2)
+        loaded_model2_weights = weights_helpers.get_weights(loaded_model2)
+        del src_model2, loaded_model2
 
+        self.assertTrue(weights_helpers.check_weights_equal(src_model1_weights, loaded_model1_weights))
+        self.assertTrue(weights_helpers.check_weights_equal(src_model2_weights, loaded_model2_weights))
+        self.assertFalse(weights_helpers.check_weights_equal(loaded_model1_weights, loaded_model2_weights))
 
-    def _check_models_weights_equal(self, model1, model2):
-        weights1 = weights_helpers.get_weights(model1)
-        weights2 = weights_helpers.get_weights(model2)
-        weights_are_equal = weights_helpers.check_weights_equal(weights1,
-                                                                weights2)
-        return weights_are_equal
+    @unittest.skipIf(not torch.cuda.is_available(), 
+                     "Cuda is not avalilable, skipping tests with it")
+    def test_use_cuda(self):
+        cuda_device = torch.device("cuda")
+        del shared_objs.mod_manager
+        manager = std_objects.get_model_manager(device=cuda_device)
+        shared_objs.mod_manager = manager
+
+        cuda_pred = manager.preproc_forward(shared_objs.features)
+
+        self.assertTrue(cuda_pred[0].is_cuda)
