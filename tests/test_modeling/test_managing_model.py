@@ -39,14 +39,13 @@ class TestModelManager(unittest.TestCase):
         self.assertIsInstance(proc_start_idxs, torch.Tensor)
         self.assertIsInstance(proc_end_idxs, torch.Tensor)
 
-    def test_reset_weights(self):
-        shared_objs.mod_manager.reset_model_weights()
+    # def test_reset_weights(self):
+    #     shared_objs.mod_manager.reset_model_weights()
 
     def test_predict_postproc(self):
         answer_start_end_idxs = shared_objs.mod_manager.predict_postproc(
                                                         shared_objs.features
                                                         )
-        print("postproc res", answer_start_end_idxs)
         self.assertEqual(len(answer_start_end_idxs), shared_objs.batch_size)
 
     def test_save_then_load(self):

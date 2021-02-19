@@ -10,11 +10,8 @@ class QADataProcessor:
         self.maxlen = 512
 
     def preprocess_features_and_labels(self, features, labels, device=None):
-        # print("sources in preprocess_features_and_labels", "features", features, "labels", labels)
         tokenized = self._tokenize(*features)
-        # print("tokenized", tokenized)
         labels_in_token_format = self._token_idxs_from_char_idxs(labels, tokenized)
-        # print("labels in token", labels_in_token_format)
         features = self._features_from_tokenized(tokenized, device)
         labels_proc = self._preproc_labels(labels_in_token_format, device)
         return features, labels_proc
@@ -25,15 +22,6 @@ class QADataProcessor:
         tokenized = self._tokenize(*features)
         proc_features = self._features_from_tokenized(tokenized, device)
         return proc_features
-
-    # def preprocess_labels(self, start_and_end_idxs, device=None):
-    #     labels_proc = []
-    #     for labels_part in start_and_end_idxs:
-    #         part_proc = torch.tensor(labels_part)
-    #         labels_proc.append(part_proc)
-    #     if not device is None:
-    #         labels_proc = self._move_tensors_to_device(labels_proc, device)
-    #     return labels_proc
 
     def postprocess_preds(self, preds):
         start_logits, end_logits = preds
@@ -79,16 +67,6 @@ class QADataProcessor:
     def _preproc_labels(self, labels, device):
         labels_proc = self._create_tensors(labels, device)
         return labels_proc
-
-    # def _preproc_texts(self, *texts):
-    #     encoded = self.tokenizer(*texts,
-    #                             max_length=self.maxlen,
-    #                             padding="max_length",
-    #                             truncation="longest_first",
-    #                             return_tensors="pt")
-
-    #     encoded_proc = self._proc_tokenizer_out(encoded)
-    #     return encoded_proc
 
     def _features_from_tokenized(self, tokenizer_out, device):
         # maybe later we'll need a tokenizer wrapper to return this parts

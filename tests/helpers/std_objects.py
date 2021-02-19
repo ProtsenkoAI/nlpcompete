@@ -2,20 +2,25 @@ from modeling.train import Trainer
 from modeling.transformer_qanda import TransformerQA
 from modeling.evaluating import Validator
 from modeling.managing_model import ModelManager
+from modeling.updating_weights.qa_weights_updater import QAWeightsUpdater
 from data.contain import DataContainer
-from data.loaders_creation import DataLoaderSepXYCreator
-from data.datasets import TrainDataset, EvalDataset
+from data.loaders_creation import DataLoaderSepPartsBuilder
+from data.datasets import StandardDataset
 from data.processors import QADataProcessor
 from .config import TestsConfig
 config = TestsConfig()
 
 
-def get_trainer(model=None, **trainer_kwargs):
-    manager = get_model_manager(model)
+def get_trainer(model=None, weights_updater_kwargs={}, **trainer_kwargs):
+    loader_builder = get_loader_builder()
     validator = get_validator()
+    weights_updater = get_weights_updater(**weights_updater_kwargs)
 
-    trainer = Trainer(manager, validator, **trainer_kwargs)
+    trainer = Trainer(validator, loader_builder, weights_updater, **trainer_kwargs)
     return trainer
+
+def get_weights_updater(**kwargs):
+    return QAWeightsUpdater(**kwargs)
 
 def get_model(**model_kwargs):
     model = TransformerQA(mname=config.model_name, **model_kwargs)
@@ -23,7 +28,8 @@ def get_model(**model_kwargs):
 
 
 def get_validator():
-    return Validator()
+    loader_builder = get_loader_builder()
+    return Validator(loader_builder)
 
 
 def get_container(nrows=10):
@@ -32,24 +38,26 @@ def get_container(nrows=10):
 
 def get_train_dataset(nrows=10):
     container = get_container(nrows=nrows)
-    return TrainDataset(container, config.model_name)
+    return StandardDataset(container, config.model_name)
     
 
 def get_val_dataset(nrows=10):
-    container = get_container(nrows=nrows)
-    return EvalDataset(container, config.model_name, has_answers=True)
+    return get_train_dataset(nrows) # same
 
 
 def get_test_dataset():
     container = get_container()
-    return EvalDataset(container, config.model_name, has_answers=False)
+    return StandardDataset(container, config.model_name, has_answers=False)
 
+
+def get_loader_builder():
+    return DataLoaderSepPartsBuilder(config.batch_size)
 
 def get_loader(dataset=None):
     if dataset is None:
         dataset = get_train_dataset()
-
-    return DataLoaderSepXYCreator(dataset, config.batch_size).get()
+    loader = get_loader_builder().build(dataset)
+    return loader
 
 def get_qa_processor(mname="DeepPavlov/rubert-base-cased"):
     return QADataProcessor(mname)

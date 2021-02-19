@@ -1,13 +1,14 @@
 from torch.utils import data as torch_data
-import transformers
+import torch
 
 
-class EvalDataset(torch_data.Dataset):
+class StandardDataset(torch_data.Dataset):
     def __init__(self, container, mname, has_answers=True):
-        self.has_answers = has_answers
         data = container.get_data()
+        self.has_answers = has_answers
         self.samples = self._get_samples(data)
 
+        self.maxlen = 512
 
     def _get_samples(self, data):
         samples = []
@@ -15,22 +16,23 @@ class EvalDataset(torch_data.Dataset):
             for question, question_data in questions:
                 sample = {"text": text, "question": question}
                 if self.has_answers:
-                    answers_idxs = question_data["answers"]
-                    sample["valid_answers"] = answers_idxs
-
-                samples.append(sample)
+                    for answer_idxs in question_data["answers"]:
+                        start, end = answer_idxs
+                        sample = {"text": text, "question": question, 
+                                "answer_start": start, "answer_end": end}
+                        samples.append(sample)
+                else:
+                    samples.append(sample)
 
         return samples
 
     def __getitem__(self, idx):
-        # TODO: at the moment I hardcoded val dataset to return first of valid answers
-        # because otherwise implemented DataLoaderSepXYCreator breaks on splitting labels.
-        # It's not a big problem because only 3 samples in train have multiple answers.
         sample = self.samples[idx]
         features = (sample["text"], sample["question"])
         if self.has_answers:
-            return features, sample["valid_answers"][0]
+            answer_start_end = sample["answer_start"], sample["answer_end"]
+            return features, answer_start_end
         return features
-        
+
     def __len__(self):
         return len(self.samples)

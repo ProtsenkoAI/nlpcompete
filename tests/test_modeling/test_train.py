@@ -11,7 +11,9 @@ class SharedObjects:
     """The class is used to speed up testing"""
     def __init__(self):
         self.model = std_objects.get_model()
-        self.trainer = std_objects.get_trainer(max_step=2, model=self.model, eval_steps=1, accum_iters=1)
+        self.manager = std_objects.get_model_manager(self.model)
+        self.trainer = std_objects.get_trainer(weights_updater_kwargs={"accum_iters": 1}
+                                              )
 
 shared_objs = SharedObjects()
 
@@ -23,11 +25,9 @@ class TestTrainer(unittest.TestCase):
         train = std_objects.get_train_dataset(nrows=1)
         val = std_objects.get_val_dataset(nrows=1)
         
-        train_loader = std_objects.get_loader(train)
-        val_loader = std_objects.get_loader(val)
 
         old_weights = weights_helpers.get_weights(shared_objs.model)
-        shared_objs.trainer.fit(train_loader, val_loader)
+        shared_objs.trainer.fit(train, val, shared_objs.manager, max_step=2, steps_betw_evals=1)
         eval_vals = shared_objs.trainer.get_eval_vals()
         self.assertGreater(len(eval_vals), 0, "validation was not conducted during training")
         new_weights = weights_helpers.get_weights(shared_objs.model)

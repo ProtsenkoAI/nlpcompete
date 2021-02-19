@@ -3,16 +3,16 @@ import numpy as np
 
 
 class Validator:
-    def __init__(self):
+    def __init__(self, loader_builder):
         # TODO: metrics are hardcoded now, maybe later we'll need to get them in arguments  
         # TODO: add multiple metrics
         self.metric = self._f1_qa_score
+        self.loader_builder = loader_builder
 
-    def eval(self, manager, test):
-        # print("starting to evaludate")
+    def eval(self, manager, dataset):
         manager.get_model().eval()
-        preds, labels = self._pred_all_batches(manager, test)
-        # print("preds and labels", preds, labels)
+        test_loader = self.loader_builder.build(dataset)
+        preds, labels = self._pred_all_batches(manager, test_loader)
         metric_val = self.metric(preds, labels)
 
         print(f"Example of eval probs: {preds[:20]}")
@@ -24,12 +24,9 @@ class Validator:
         all_labels = []
         for batch in tqdm(test, desc="eval"):
             features, labels_unproc = batch
-            print("eval batch", labels_unproc)
             preds, labels_proc = manager.predict_postproc_labeled(features, labels_unproc)
             all_preds += list(preds)
             all_labels += list(labels_proc)
-        print("all_preds", all_preds)
-        print("all_labels", all_labels)
         return all_preds, all_labels
         
 

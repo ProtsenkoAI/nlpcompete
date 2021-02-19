@@ -1,14 +1,6 @@
 import unittest
 import torch
 
-
-from modeling.transformer_qanda import TransformerQA
-from modeling.evaluating import Validator
-from data.contain import DataContainer
-from data.loaders_creation import DataLoaderSepXYCreator
-
-from data.datasets import TrainDataset, EvalDataset
-
 from . import weights_helpers
 from ..helpers import config, std_objects
 config = config.TestsConfig()

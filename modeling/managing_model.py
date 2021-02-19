@@ -35,15 +35,9 @@ class ModelManager:
     #     proc_labels = self.processor.preprocess_labels(labels, self.device)
     #     return proc_labels
 
-    def reset_model_weights(self):
-        self.model.reset_weights()
-
     def predict_postproc(self, features):
         preds = self.preproc_forward(features)
-        # print("src preds shape", preds[0].shape, preds[1].shape)
         processed_out = self.processor.postprocess_preds(preds)
-        # print("process out", processed_out)
-        # print("then", start_end_batches)
         return processed_out
 
     def predict_postproc_labeled(self, features, labels):
