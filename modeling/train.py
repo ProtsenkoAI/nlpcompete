@@ -1,5 +1,5 @@
 import numpy as np
-from tqdm import tqdm
+from tqdm.notebook import tqdm
 
 
 class Trainer:
@@ -13,17 +13,17 @@ class Trainer:
         self.step_nb = 0
         self.epoch_nb = 0
 
-
     def fit(self, train_dataset, test_dataset, model_manager, max_epoch=None, max_step=None, 
             stop_patience=2, steps_betw_evals=200):
+            # TODO: get one dataset and split it inside this class
         # TODO: reset weights when starting training
-        train_loader = self.loader_builder.build(train_dataset)
+        train_loader = self.loader_builder.build(train_dataset, has_answers=True)
         num_train_steps = self._calc_num_train_steps(max_epoch, max_step, len(train_loader))
         self.weights_updater.prepare_for_fit(model_manager, num_train_steps)
 
         losses = []
         while True:
-            for batch in train_loader:
+            for batch in tqdm(train_loader):
                 if self.early_stopping(max_epoch, max_step, stop_patience):
                     return
                 loss_val = self.weights_updater.fit_with_batch(model_manager, batch)

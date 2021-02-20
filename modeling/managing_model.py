@@ -38,6 +38,7 @@ class ModelManager:
     def predict_postproc(self, features):
         preds = self.preproc_forward(features)
         processed_out = self.processor.postprocess_preds(preds)
+        answers = self.processor.text_from_preds(processed_out, features)
         return processed_out
 
     def predict_postproc_labeled(self, features, labels):
@@ -46,7 +47,6 @@ class ModelManager:
         non_tensor_labels = self.processor.postprocess_labels(labels_proc)
         labels_start_end = list(zip(*non_tensor_labels))
         return process_preds, labels_start_end
-
 
     def save_model(self):
         generated_name = f"lol_model{random.randint(0, 1000000)}_weights.pt"

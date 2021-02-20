@@ -16,7 +16,6 @@ class QADataProcessor:
         labels_proc = self._preproc_labels(labels_in_token_format, device)
         return features, labels_proc
 
-
     def preprocess_features(self, features, device=None):
         # proc_features = self._preproc_texts(contexts, questions)
         tokenized = self._tokenize(*features)
@@ -30,6 +29,13 @@ class QADataProcessor:
         conved = start_argmax.cpu().detach().numpy(), end_argmax.cpu().detach().numpy()
         conved_grouped_by_sample = list(zip(*conved))
         return conved_grouped_by_sample
+
+    def text_from_preds(self, postproc_preds, features):
+        # TODO: at the moment we tokenize text two times, have to postproc preds and make predictions
+        # in one function
+        # TODO: handle case if predictions are out of text
+        texts, questions = features
+        # tokenized_texts =
 
     def postprocess_labels(self, labels):
         start, end = labels
@@ -80,8 +86,9 @@ class QADataProcessor:
     def _create_tensors(self, arrays, device):
         tensors = []
         for arr in arrays:
-            tensor = torch.tensor(arr)
+            if not isinstance(arr, torch.Tensor):
+                arr = torch.tensor(arr)
             if not device is None:
-                tensor = tensor.to(device, copy=True)
-            tensors.append(tensor)
+                arr = arr.to(device, copy=True)
+            tensors.append(arr)
         return tensors

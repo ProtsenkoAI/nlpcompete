@@ -21,15 +21,16 @@ class TestTrainer(unittest.TestCase):
     def test_init(self):
         self.assertIsInstance(shared_objs.trainer, Trainer)
 
-    def test_fit(self):
-        train = std_objects.get_train_dataset(nrows=1)
-        val = std_objects.get_val_dataset(nrows=1)
+    def test_fit_and_eval(self):
+        train = std_objects.get_train_dataset(nrows=3)
+        val = std_objects.get_val_dataset(nrows=3)
         
 
         old_weights = weights_helpers.get_weights(shared_objs.model)
         shared_objs.trainer.fit(train, val, shared_objs.manager, max_step=2, steps_betw_evals=1)
         eval_vals = shared_objs.trainer.get_eval_vals()
         self.assertGreater(len(eval_vals), 0, "validation was not conducted during training")
+        self.assertTrue(isinstance(eval_vals[0], (float, int)))
         new_weights = weights_helpers.get_weights(shared_objs.model)
 
         weights_equal = weights_helpers.check_weights_equal(old_weights, new_weights)

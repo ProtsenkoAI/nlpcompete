@@ -6,20 +6,17 @@ class DataLoaderSepPartsBuilder:
     def __init__(self, batch):
         self.batch = batch
 
-    def build(self, dataset):
+    def build(self, dataset, has_answers=True):
         def sep_xy(objects_list):
-            zipped_out = list(zip(*objects_list))
-            if dataset.has_answers:
+            zipped_out = self._sep_parts(objects_list)
+            if has_answers:
                 features, labels = zipped_out
+                features = self._sep_parts(features)
                 labels = self._sep_parts(labels)
+                return features, labels
             else:
                 features = zipped_out
-            
-            features = self._sep_parts(features)
-
-            if dataset.has_answers:
-                return features, labels
-            return features
+                return features
 
         return torch_data.DataLoader(dataset=dataset,
                                      collate_fn=sep_xy,

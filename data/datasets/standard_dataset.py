@@ -3,12 +3,10 @@ import torch
 
 
 class StandardDataset(torch_data.Dataset):
-    def __init__(self, container, mname, has_answers=True):
+    def __init__(self, container, has_answers=True):
         data = container.get_data()
         self.has_answers = has_answers
         self.samples = self._get_samples(data)
-
-        self.maxlen = 512
 
     def _get_samples(self, data):
         samples = []

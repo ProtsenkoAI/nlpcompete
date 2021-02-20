@@ -1,45 +1,40 @@
 import json
 import os
+from tqdm.notebook import tqdm
 
 
 class Submitter:
-    def __init__(self, container, subm_dir):
-        self.container = container
+    def __init__(self, loader_builder, subm_dir="./"):
+        self.loader_builder = loader_builder
         self.subm_dir = subm_dir
         os.makedirs(subm_dir, exist_ok=True)
 
-    def create_submission(self, subm_file_name, answers_idxs):
-        answers = self._get_answers_by_idxs(answers_idxs)
-        data = self.container.get_data()
-        ids = self._get_data_ids(data)
-
+    def create_submission(self, model_manager, dataset, subm_file_name="submission"):
+        loader = self.loader_builder.build(dataset, has_answers=False)
+        ids, answers = self._get_question_ids_make_answers(loader, model_manager)
         subm_dict = self._form_submission(ids, answers)
         self._write_subm_json(subm_file_name, subm_dict)
 
-    def _get_answers_by_idxs(self, answers_idxs):
-        answers = []
-        data = self.container.get_data()
-        answers_idx = 0
+    def _get_question_ids_make_answers(self, loader, manager):
+        ids, answers = [], []
+        for features in tqdm(loader, desc="Making submit predictions"):
+            quest_ids, contexts, questions = features
+            pred_tokens_idxs = manager.predict_postproc((contexts, questions))
+            answers = self._get_answers_by_idxs(pred_tokens_idxs, contexts)
 
-        for text, questions in data:
-            questions_nb = len(questions)
-            for ans_start, ans_end in answers_idxs[answers_idx: answers_idx + questions_nb]:
-                answer = text[ans_start: ans_end]
-                answers.append(answer)
-            answers_idx += questions_nb
+            ids += list(quest_ids)
+            answers += answers
+            print("sub", ids)
+            print(answers)
+        return ids, answers
+
+    def _get_answers_by_idxs(self, start_end_idxs, texts):
+        answers = []
+        for (start, end), text in zip(start_end_idxs, texts):
+            answer = text[start: end]
+            answers.append(answer)
             
         return answers
-
-    def _get_data_texts(self, data):
-        return data["text"]
-
-    def _get_data_ids(self, data):
-        ids = []
-        for text, text_data in data:
-            for question, question_data in text_data:
-                question_id = question_data["id"]
-                ids.append(question_id)
-        return ids
 
     def _form_submission(self, ids, answers):
         return dict(zip(ids, answers))
