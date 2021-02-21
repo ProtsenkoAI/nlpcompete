@@ -39,7 +39,7 @@ class ModelManager:
         preds = self.preproc_forward(features)
         processed_out = self.processor.postprocess_preds(preds)
         answers = self.processor.text_from_preds(processed_out, features)
-        return processed_out
+        return answers
 
     def predict_postproc_labeled(self, features, labels):
         preds, labels_proc = self.preproc_forward_labeled(features, labels)

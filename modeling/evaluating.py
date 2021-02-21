@@ -37,9 +37,6 @@ class Validator:
         not tokens. 
         Source code: https://github.com/nlpyang/pytorch-transformers/blob/master/examples/utils_squad_evaluate.py"""
         # TODO: documentation
-        # TODO: fix to use number of tokens, not letters!
-        raise NotImplementedError
-        
         samples_f1 = []
         for sample_labels, sample_preds in zip(labels, preds):
             f1_of_sample = self._sample_f1(*sample_labels, *sample_preds)
@@ -47,6 +44,8 @@ class Validator:
         return np.mean(samples_f1)
 
     def _sample_f1(self, gold_ans_start, gold_ans_end, pred_start, pred_end):
+        print(gold_ans_start, gold_ans_end, pred_start, pred_end)
+        raise NotImplementedError("pass TOKENS to f1, not char idxs!")
         most_left_end = min(gold_ans_end, pred_end)
         most_right_start = max(gold_ans_start, pred_start)
         num_same = most_left_end - most_right_start

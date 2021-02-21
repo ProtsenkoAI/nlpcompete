@@ -19,22 +19,13 @@ class Submitter:
         ids, answers = [], []
         for features in tqdm(loader, desc="Making submit predictions"):
             quest_ids, contexts, questions = features
-            pred_tokens_idxs = manager.predict_postproc((contexts, questions))
-            answers = self._get_answers_by_idxs(pred_tokens_idxs, contexts)
+            pred_tokens = manager.predict_postproc((contexts, questions))
 
             ids += list(quest_ids)
-            answers += answers
+            answers += pred_tokens
             print("sub", ids)
-            print(answers)
+            print(pred_tokens)
         return ids, answers
-
-    def _get_answers_by_idxs(self, start_end_idxs, texts):
-        answers = []
-        for (start, end), text in zip(start_end_idxs, texts):
-            answer = text[start: end]
-            answers.append(answer)
-            
-        return answers
 
     def _form_submission(self, ids, answers):
         return dict(zip(ids, answers))

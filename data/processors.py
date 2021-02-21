@@ -24,18 +24,30 @@ class QADataProcessor:
 
     def postprocess_preds(self, preds):
         start_logits, end_logits = preds
-        start_argmax = torch.argmax(start_logits, dim=-1)
-        end_argmax = torch.argmax(end_logits, dim=-1) + 1
+        # start_argmax = torch.argmax(start_logits, dim=-1)
+        # end_argmax = torch.argmax(end_logits, dim=-1) + 1
+        for start_token in start_logits:
+            max_end_right_from_start = torch.argmax(end_logits)
+            
         conved = start_argmax.cpu().detach().numpy(), end_argmax.cpu().detach().numpy()
         conved_grouped_by_sample = list(zip(*conved))
         return conved_grouped_by_sample
 
     def text_from_preds(self, postproc_preds, features):
-        # TODO: at the moment we tokenize text two times, have to postproc preds and make predictions
-        # in one function
+        # TODO: at the moment we tokenize text two times, have to postproc preds and make predictions in one function
         # TODO: handle case if predictions are out of text
         texts, questions = features
-        # tokenized_texts =
+        tokenized_texts = self._tokenize(texts)["input_ids"]
+        print("postproc_preds", postproc_preds)
+        print("tokenized_texts", tokenized_texts)
+        answers = []
+        for (start, end), tokens in zip(postproc_preds, tokenized_texts):
+            tokens_ids_in_answer = tokens[start: end]
+            answer_tokens = self.tokenizer.convert_ids_to_tokens(tokens_ids_in_answer)
+            answer = self.tokenizer.convert_tokens_to_string(answer_tokens)
+            answers.append(answer)
+        print("answers", answers)
+        return answers
 
     def postprocess_labels(self, labels):
         start, end = labels
