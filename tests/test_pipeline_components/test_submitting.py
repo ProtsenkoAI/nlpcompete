@@ -1,7 +1,7 @@
 import unittest
 import os
 
-from ..helpers import config, std_objects
+from tests.helpers import config, std_objects
 from pipeline_components.submitting import Submitter
 config = config.TestsConfig()
 
@@ -10,7 +10,7 @@ class SharedObjects:
     def __init__(self):
         self.loader_builder = std_objects.get_loader_builder()
         self.manager = std_objects.get_model_manager()
-        self.subm_dir = "./"
+        self.subm_dir = "../test_data/"
         self.submitter = Submitter(self.loader_builder, subm_dir=self.subm_dir)
 
 

@@ -1,8 +1,8 @@
 import unittest
 
 from pipeline_components.train import Trainer
-from ..helpers import config, std_objects
-from . import weights_helpers
+from tests.helpers import config, std_objects
+from tests.test_model_level import weights_helpers
 config = config.TestsConfig()
 
 class SharedObjects:

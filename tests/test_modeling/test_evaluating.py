@@ -1,10 +1,7 @@
 import unittest
-import torch
-import sys
 
-from modeling.train import Trainer
 from ..helpers import config, std_objects
-from . import weights_helpers
+
 config = config.TestsConfig()
 
 class SharedObjects:

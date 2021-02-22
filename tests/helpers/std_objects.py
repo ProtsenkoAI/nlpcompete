@@ -1,4 +1,4 @@
-from modeling.train import Trainer
+from pipeline_components.train import Trainer
 from modeling.transformer_qanda import TransformerQA
 from modeling.evaluating import Validator
 from modeling.managing_model import ModelManager
@@ -6,7 +6,7 @@ from modeling.updating_weights.qa_weights_updater import QAWeightsUpdater
 from data.contain import DataContainer
 from data.loaders_creation import DataLoaderSepPartsBuilder
 from data.datasets import StandardDataset, SubmDataset
-from data.processors import QADataProcessor
+from model_level.processors import QADataProcessor
 from .config import TestsConfig
 import torch
 config = TestsConfig()

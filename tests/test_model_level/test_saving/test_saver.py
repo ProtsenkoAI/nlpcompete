@@ -1,6 +1,6 @@
 import unittest
 
-from ..helpers import config
+from tests.helpers import config
 
 config = config.TestsConfig()
 
