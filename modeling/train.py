@@ -15,7 +15,7 @@ class Trainer:
 
     def fit(self, train_dataset, test_dataset, model_manager, max_epoch=None, max_step=None, 
             stop_patience=2, steps_betw_evals=200):
-            # TODO: get one dataset and split it inside this class
+        # TODO: get one dataset and split it inside this class
         # TODO: reset weights when starting training
         train_loader = self.loader_builder.build(train_dataset, has_answers=True)
         num_train_steps = self._calc_num_train_steps(max_epoch, max_step, len(train_loader))

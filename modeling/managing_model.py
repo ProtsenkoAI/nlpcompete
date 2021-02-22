@@ -9,7 +9,7 @@ class ModelManager:
     save_dir = "./saved_models/"
     os.makedirs(save_dir, exist_ok=True)
 
-    def __init__(self, model, processor, device=None):
+    def __init__(self, model, processor, device):
         # TODO: add device support
         self.model = model
         self.processor = processor

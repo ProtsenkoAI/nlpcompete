@@ -23,8 +23,6 @@ class Submitter:
 
             ids += list(quest_ids)
             answers += pred_tokens
-            print("sub", ids)
-            print(pred_tokens)
         return ids, answers
 
     def _form_submission(self, ids, answers):

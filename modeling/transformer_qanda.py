@@ -24,7 +24,7 @@ class TransformerQA(nn.Module):
 
     def forward(self, transformer_inputs):
         x = self.transformer(*transformer_inputs)
-        x = x["last_hidden_state"] # be attentive: last_hidden_state isn't used for classification
+        x = x["last_hidden_state"]  # be attentive: last_hidden_state isn't used for classification
         x = self.head(x)
 
         start_logits, end_logits = x.split(1, dim=-1)

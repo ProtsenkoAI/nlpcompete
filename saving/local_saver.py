@@ -3,5 +3,4 @@ class LocalSaver:
         self.save_dir = save_dir
 
     def save(self):
-        print("kono Dio da")
         raise NotImplementedError

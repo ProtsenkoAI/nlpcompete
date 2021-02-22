@@ -27,7 +27,6 @@ class Validator:
             all_preds += list(preds)
             all_labels += list(labels_proc)
         return all_preds, all_labels
-        
 
     def _em_score(self, preds, correct_answers):
         raise NotImplementedError
@@ -44,8 +43,6 @@ class Validator:
         return np.mean(samples_f1)
 
     def _sample_f1(self, gold_ans_start, gold_ans_end, pred_start, pred_end):
-        print(gold_ans_start, gold_ans_end, pred_start, pred_end)
-        raise NotImplementedError("pass TOKENS to f1, not char idxs!")
         most_left_end = min(gold_ans_end, pred_end)
         most_right_start = max(gold_ans_start, pred_start)
         num_same = most_left_end - most_right_start
