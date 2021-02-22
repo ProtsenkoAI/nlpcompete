@@ -3,7 +3,7 @@ from tqdm.notebook import tqdm
 
 
 class Trainer:
-    # TODO: manage answers out of scope (512 tokenss)
+    # TODO: manage answers out of scope (512 tokens)
     def __init__(self, validator, loader_builder, weights_updater):
         self.loader_builder = loader_builder
         self.validator = validator
@@ -16,7 +16,7 @@ class Trainer:
     def fit(self, train_dataset, test_dataset, model_manager, max_epoch=None, max_step=None, 
             stop_patience=2, steps_betw_evals=200):
         # TODO: get one dataset and split it inside this class
-        # TODO: reset weights when starting training
+        model_manager.reset_model_weights()
         train_loader = self.loader_builder.build(train_dataset, has_answers=True)
         num_train_steps = self._calc_num_train_steps(max_epoch, max_step, len(train_loader))
         self.weights_updater.prepare_for_fit(model_manager, num_train_steps)

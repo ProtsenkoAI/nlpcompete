@@ -57,7 +57,7 @@ class QAWeightsUpdater:
 
     def _calc_loss(self, manager, inputs, labels):
         with amp.autocast(enabled=self.use_amp):    
-            preds, labels = manager.preproc_forward_labeled(inputs, labels) # TODO: refactor like in Skady
+            preds, labels = manager.preproc_forward(inputs, labels) # TODO: refactor like in Skady
             start_labels, end_labels = labels
             start_probs, end_probs = preds
             loss_start = self.criterion(start_probs, start_labels)

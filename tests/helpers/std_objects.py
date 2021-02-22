@@ -1,13 +1,15 @@
 from pipeline_components.train import Trainer
-from modeling.transformer_qanda import TransformerQA
-from modeling.evaluating import Validator
-from modeling.managing_model import ModelManager
-from modeling.updating_weights.qa_weights_updater import QAWeightsUpdater
+from model_level.models.transformer_qanda import TransformerQA
+from model_level.evaluating import Validator
+from model_level.managing_model import ModelManager
+from model_level.updating_weights.qa_weights_updater import QAWeightsUpdater
 from data.contain import DataContainer
 from data.loaders_creation import DataLoaderSepPartsBuilder
 from data.datasets import StandardDataset, SubmDataset
 from model_level.processors import QADataProcessor
+from model_level.saving.local_saver import LocalSaver
 from .config import TestsConfig
+
 import torch
 config = TestsConfig()
 
@@ -81,3 +83,7 @@ def get_model_manager(model=None, device=None):
     data_processor = get_qa_processor()
     
     return ModelManager(model, data_processor, device=device)
+
+
+def get_local_saver(**kwargs):
+    return LocalSaver(**kwargs)

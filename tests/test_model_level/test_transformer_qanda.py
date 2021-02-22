@@ -1,7 +1,6 @@
 import unittest
-import torch
 
-from . import weights_helpers
+from ..test_pipeline_components import weights_helpers
 from ..helpers import config, std_objects
 config = config.TestsConfig()
 
@@ -15,7 +14,7 @@ class SharedObjects:
         features_unproc, labels_unproc = next(iter(loader))
         # self.features = processor.preprocess_features(features_unproc)
         # self.labels = processor.preprocess_labels(labels_unproc)
-        self.features, self.labels = processor.preprocess_features_and_labels(features_unproc, labels_unproc)
+        self.features, self.labels = processor.preprocess(features_unproc, labels_unproc)
 
 
 shared_objs = SharedObjects()

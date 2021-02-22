@@ -1,5 +1,6 @@
 from tqdm.notebook import tqdm
 import numpy as np
+import collections
 
 
 class Validator:
@@ -23,7 +24,7 @@ class Validator:
         all_labels = []
         for batch in tqdm(test, desc="eval"):
             features, labels_unproc = batch
-            preds, labels_proc = manager.predict_postproc_labeled(features, labels_unproc)
+            preds, labels_proc = manager.predict_get_text(features, labels_unproc)
             all_preds += list(preds)
             all_labels += list(labels_proc)
         return all_preds, all_labels
@@ -38,25 +39,21 @@ class Validator:
         # TODO: documentation
         samples_f1 = []
         for sample_labels, sample_preds in zip(labels, preds):
-            f1_of_sample = self._sample_f1(*sample_labels, *sample_preds)
+            f1_of_sample = self._sample_f1(sample_labels, sample_preds)
             samples_f1.append(f1_of_sample)
         return np.mean(samples_f1)
 
-    def _sample_f1(self, gold_ans_start, gold_ans_end, pred_start, pred_end):
-        most_left_end = min(gold_ans_end, pred_end)
-        most_right_start = max(gold_ans_start, pred_start)
-        num_same = most_left_end - most_right_start
-
-        if num_same <= 0:
+    def _sample_f1(self, true_answer, predicted):
+        pred_toks = predicted.split()
+        gold_toks = true_answer.split()
+        common = collections.Counter(gold_toks) & collections.Counter(pred_toks)
+        num_same = sum(common.values())
+        if len(gold_toks) == 0 or len(pred_toks) == 0:
+            # If either is no-answer, then F1 is 1 if they agree, 0 otherwise
+            return int(gold_toks == pred_toks)
+        if num_same == 0:
             return 0
-
-        gold_ans_len = gold_ans_end - gold_ans_start
-        pred_len = pred_end - pred_start
-        precision = 1.0 * num_same / pred_len
-        recall = 1.0 * num_same / gold_ans_len
-        if precision + recall == 0:
-            return 0
-
+        precision = 1.0 * num_same / len(pred_toks)
+        recall = 1.0 * num_same / len(gold_toks)
         f1 = (2 * precision * recall) / (precision + recall)
         return f1
-

@@ -2,8 +2,10 @@ import unittest
 
 from pipeline_components.train import Trainer
 from tests.helpers import config, std_objects
-from tests.test_model_level import weights_helpers
+from tests.test_pipeline_components import weights_helpers
+
 config = config.TestsConfig()
+
 
 class SharedObjects:
     """The class is used to speed up testing"""
@@ -13,7 +15,9 @@ class SharedObjects:
         self.trainer = std_objects.get_trainer(weights_updater_kwargs={"accum_iters": 1}
                                               )
 
+
 shared_objs = SharedObjects()
+
 
 class TestTrainer(unittest.TestCase):
     def test_init(self):
@@ -22,7 +26,6 @@ class TestTrainer(unittest.TestCase):
     def test_fit_and_eval(self):
         train = std_objects.get_train_dataset(nrows=3)
         val = std_objects.get_val_dataset(nrows=3)
-        
 
         old_weights = weights_helpers.get_weights(shared_objs.model)
         shared_objs.trainer.fit(train, val, shared_objs.manager, max_step=2, steps_betw_evals=1)

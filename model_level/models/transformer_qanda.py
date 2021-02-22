@@ -11,12 +11,22 @@ class TransformerQA(nn.Module):
         super().__init__()
         self.mname = mname
         self.cache_dir = cache_dir
+        self.droprate = droprate
+        self.head_nlayers = head_nlayers
+        self.head_nneurons = head_nneurons
         self.classification_thresh = 0.5
 
         self.transformer = self._load_transformer()
         self.transformer_out_size = self._get_transformer_out_size(self.transformer)
 
         self.head = self._create_head(droprate, head_nlayers, head_nneurons)
+
+    def get_init_kwargs(self):
+        return {"mname": self.mname,
+                "cache_dir": self.cache_dir,
+                "droprate": self.droprate,
+                "head_nlayers": self.head_nlayers,
+                "head_nneurons": self.head_nneurons}
 
     def _get_transformer_out_size(self, model):
         config = model.config.to_dict()

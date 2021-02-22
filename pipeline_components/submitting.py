@@ -19,7 +19,7 @@ class Submitter:
         ids, answers = [], []
         for features in tqdm(loader, desc="Making submit predictions"):
             quest_ids, contexts, questions = features
-            pred_tokens = manager.predict_postproc((contexts, questions))
+            pred_tokens = manager.predict_get_text((contexts, questions))
 
             ids += list(quest_ids)
             answers += pred_tokens
