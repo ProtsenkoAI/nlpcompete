@@ -40,9 +40,9 @@ class DataContainer:
             # question_data = {"id": quest_id, "answers": answers}
             question_data = ParsedQuestionAnswers(id=quest_id, answers=answers)
             # questions_and_answers.append((question, question_data))
-            questions_and_answers.append(ParsedQuestion(question, question_data))
+            questions_and_answers.append((question, question_data))
         # return text, questions_and_answers
-        return ParsedParagraph(text, questions_and_answers)
+        return text, questions_and_answers
 
     def _get_answers(self, qna: TrainQuestion) -> List[ParsedAnswer]:
         answers = []
@@ -56,4 +56,4 @@ class DataContainer:
         answer_length = len(answer["text"])
         start_idx = answer["answer_start"]
         end_idx = start_idx + answer_length
-        return ParsedAnswer(start_idx, end_idx)
+        return start_idx, end_idx
