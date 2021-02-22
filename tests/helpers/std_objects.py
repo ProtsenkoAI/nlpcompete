@@ -37,27 +37,26 @@ def get_validator():
     return Validator(loader_builder)
 
 
-def get_container(nrows=10):
-    return DataContainer(config.train_path, nrows=nrows)
+def get_container(path=None, nrows=10):
+    if path is None:
+        path = config.train_path
+    return DataContainer(path, nrows=nrows)
 
 
-def get_train_dataset(nrows=10):
-    container = get_container(nrows=nrows)
+def get_train_dataset(container=None, nrows=10):
+    if container is None:
+        container = get_container(nrows=nrows)
     return StandardDataset(container)
     
 
 def get_val_dataset(nrows=10):
-    return get_train_dataset(nrows)
+    return get_train_dataset(nrows=nrows)
 
 
-def get_subm_dataset(nrows=10):
-    container = get_container(nrows=nrows)
+def get_subm_dataset(container=None, nrows=10):
+    if container is None:
+        container = get_container(nrows=nrows)
     return SubmDataset(container)
-
-
-def get_test_dataset():
-    container = get_container()
-    return StandardDataset(container, config.model_name)
 
 
 def get_loader_builder():

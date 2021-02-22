@@ -13,8 +13,6 @@ class SharedObjects:
         self.model = std_objects.get_model()
         self.mod_manager = std_objects.get_model_manager(self.model)
 
-        # loader = std_objects.get_loader()
-        # self.features, self.labels = next(iter(loader))
         self.batch_size = 4
         self.features = (["lul it's context"] * self.batch_size,
                          ["some question?"] * self.batch_size
@@ -57,8 +55,9 @@ class TestModelManager(unittest.TestCase):
     def test_save_then_load(self):
         saver = std_objects.get_local_saver()
         model_name = shared_objs.mod_manager.save_model(saver)
+        del shared_objs.model
         self.assertIsInstance(model_name, str)
-        del shared_objs.mod_manager, shared_objs.model
+        del shared_objs.mod_manager
         loaded_manager = ModelManager.load(saver, model_name)
         self.assertIsInstance(loaded_manager, ModelManager)
         shared_objs.model = std_objects.get_model()

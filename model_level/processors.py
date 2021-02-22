@@ -66,6 +66,7 @@ class QADataProcessor:
         return encoded
 
     def _char_idxs_to_token_idxs(self, char_idxs, tokenizer_out):
+        # TODO: refactor and fix
         start_chars, end_chars = char_idxs
         tokens_positions = tokenizer_out["offset_mapping"]
         start_tokens, end_tokens = [], []

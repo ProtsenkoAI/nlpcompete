@@ -5,8 +5,7 @@ import collections
 
 class Validator:
     def __init__(self, loader_builder):
-        # TODO: metrics are hardcoded now, maybe later we'll need to get them in arguments  
-        # TODO: add multiple metrics
+        # TODO: metrics are hardcoded now, maybe later we'll need to get them in arguments
         self.metric = self._f1_qa_score
         self.loader_builder = loader_builder
 
