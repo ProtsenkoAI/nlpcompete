@@ -1,36 +1,35 @@
+from typing import List
+
 from torch.utils import data as torch_data
-import torch
+
+from ..contain import DataContainer
+from ..types.parsed import ParsedParagraph
+from ..types.dataset import SampleWithAnswers, SampleFeatures, SampleFeaturesWithAnswers
 
 
 class StandardDataset(torch_data.Dataset):
-    def __init__(self, container, has_answers=True):
+    def __init__(self, container: DataContainer):
         data = container.get_data()
-        self.has_answers = has_answers
         self.samples = self._get_samples(data)
 
-    def _get_samples(self, data):
-        samples = []
+    def _get_samples(self, data: List[ParsedParagraph]) -> List[SampleWithAnswers]:
+        samples: List[SampleWithAnswers] = []
         for text, questions in data:
             for question, question_data in questions:
-                sample = {"text": text, "question": question}
-                if self.has_answers:
-                    for answer_idxs in question_data["answers"]:
-                        start, end = answer_idxs
-                        sample = {"text": text, "question": question, 
-                                "answer_start": start, "answer_end": end}
-                        samples.append(sample)
-                else:
+                for answer_idxs in question_data["answers"]:
+                    start, end = answer_idxs
+                    # sample = {"text": text, "question": question,
+                    #           "answer_start": start, "answer_end": end}
+                    sample = SampleWithAnswers(text=text, question=question,
+                                               answer_start=start, answer_end=end)
                     samples.append(sample)
-
         return samples
 
-    def __getitem__(self, idx):
+    def __getitem__(self, idx: int) -> SampleFeaturesWithAnswers:
         sample = self.samples[idx]
-        features = (sample["text"], sample["question"])
-        if self.has_answers:
-            answer_start_end = sample["answer_start"], sample["answer_end"]
-            return features, answer_start_end
-        return features
+        features = SampleFeatures(text=sample["text"], question=sample["question"])
+        answer_start_end = sample["answer_start"], sample["answer_end"]
+        return SampleFeaturesWithAnswers(features, answer_start_end)
 
-    def __len__(self):
+    def __len__(self) -> int:
         return len(self.samples)
