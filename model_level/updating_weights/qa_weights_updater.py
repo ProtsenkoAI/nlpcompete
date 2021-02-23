@@ -2,13 +2,13 @@ from torch import optim
 from torch import nn
 from torch.cuda import amp
 import transformers
-
+from time import time
 
 
 class QAWeightsUpdater:
     def __init__(self, lr=2e-5, weight_decay=1e-2, accum_iters=1, warmup=0, lr_end=1e-7,
                  use_amp=False, ):
-        
+
         self.lr = lr
         self.weight_decay = weight_decay
         self.accum_iters = accum_iters
@@ -18,27 +18,25 @@ class QAWeightsUpdater:
 
         self.criterion = nn.CrossEntropyLoss()
         if self.use_amp:
-            self.scaler = GradScaler()
+            self.scaler = amp.GradScaler()
 
         # should be inited by calling prepare_for_fit()
         self.optimizer = None
         self.lr_scheduler = None
-        
+
         self.step_idx = 0
 
     def prepare_for_fit(self, model_manager, nb_train_steps):
-        self.optimizer = optim.AdamW(model_manager.get_model().parameters(), 
+        self.optimizer = optim.AdamW(model_manager.get_model().parameters(),
                                      lr=self.lr, weight_decay=self.weight_decay)
-    
+
         total_steps = nb_train_steps // self.accum_iters
-        self.lr_scheduler = transformers.get_polynomial_decay_schedule_with_warmup(optimizer=self.optimizer, 
-                                                                      num_warmup_steps=self.warmup, 
-                                                                      num_training_steps=total_steps,
-                                                                      lr_end=self.lr_end)
+        self.lr_scheduler = transformers.get_polynomial_decay_schedule_with_warmup(optimizer=self.optimizer,
+                                                                                   num_warmup_steps=self.warmup,
+                                                                                   num_training_steps=total_steps,
+                                                                                   lr_end=self.lr_end)
 
     def fit_with_batch(self, manager, batch):
-        # TODO: uncomment
-        # if self._check_batch_format(batch):
         inputs, labels = batch
         loss = self._calc_loss(manager, inputs, labels)
         self._backward_loss(loss)
@@ -48,16 +46,13 @@ class QAWeightsUpdater:
 
         self.step_idx += 1
         return loss.item()
-        # else:
-        #     print("batch_format is wrong")
-        #     return None
-
-    def _check_batch_format(self, batch):
-        raise NotImplementedError
 
     def _calc_loss(self, manager, inputs, labels):
-        with amp.autocast(enabled=self.use_amp):    
-            preds, labels = manager.preproc_forward(inputs, labels) # TODO: refactor like in Skady
+        with amp.autocast(enabled=self.use_amp):
+            try:
+                preds, labels = manager.preproc_forward(inputs, labels)
+            except Exception as e:
+                raise e
             start_labels, end_labels = labels
             start_probs, end_probs = preds
             loss_start = self.criterion(start_probs, start_labels)

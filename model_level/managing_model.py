@@ -1,10 +1,9 @@
 import torch
+from time import time
 
 
 class ModelManager:
-    # TODO: move train low-level operations to some class that'll be composed by modelmanager
     def __init__(self, model, processor, device):
-        # TODO: add device support
         self.model = model
         self.processor = processor
         if device is None:
@@ -29,20 +28,16 @@ class ModelManager:
             preds = self.model(proc_feats)
             return preds, labels_proc
 
-    def predict_get_text(self, features, labels=None):
+    def predict_postproc(self, features, labels=None):
         out = self.preproc_forward(features, labels)
         if labels is None:
             preds = out
-            postproc_preds = self.processor.postprocess(preds)
+            postproc_preds = self.processor.postprocess(preds, features)
         else:
-            preds, preproc_labels = out
-            postproc_preds, postproc_labels = self.processor.postprocess(preds, preproc_labels)
-            ground_truth_text = self.processor.text_from_token_idxs(postproc_labels, features)
-
-        pred_answers = self.processor.text_from_token_idxs(postproc_preds, features)
-        if not labels is None:
-            return pred_answers, ground_truth_text
-        return pred_answers
+            preds, _ = out
+            postproc_preds, postproc_labels = self.processor.postprocess(preds, features, labels)
+            return postproc_preds, postproc_labels
+        return postproc_preds
 
     def save_model(self, saver):
         return saver.save(self.model, self.processor)

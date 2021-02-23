@@ -15,4 +15,4 @@ class TestsConfig:
 
         self.model_name = "DeepPavlov/rubert-base-cased"
 
-        self.batch_size = 8
+        self.batch_size = 4

@@ -5,9 +5,7 @@ import numpy as np
 
 class QADataProcessor:
     # TODO: convert logits to probabilities?
-    # TODO: maybe move converting from batches to categories from loaders to processor (wow, sounds cool
-    #  and we don't need loadercreator anymore)
-    # TODO: delete samples whose answers aren't in context
+    # TODO: the class is too large, maybe add assistant components
     def __init__(self, mname):
         self.mname = mname
         self.tokenizer = transformers.AutoTokenizer.from_pretrained(mname)
@@ -18,34 +16,87 @@ class QADataProcessor:
 
     def preprocess(self, features, labels=None, device=None):
         tokenized = self._tokenize(*features)
-        features = self._features_from_tokenized(tokenized, device)
+        if not labels is None:
+            tokenized, labels = self._filter_samples(tokenized, labels)
+
+        features_proc = self._features_from_tokenized(tokenized, device)
         if not labels is None:
             labels_in_token_format = self._char_idxs_to_token_idxs(labels, tokenized)
             labels_proc = self._preproc_labels(labels_in_token_format, device)
-            return features, labels_proc
-        return features
+            return features_proc, labels_proc
+        return features_proc
 
-    def postprocess(self, preds, labels=None):
+    def postprocess(self, preds, src_features, src_labels=None):
+        preds = self._fill_zeros_out_of_context(preds, src_features, src_labels)
         start_logits, end_logits = preds
-        start_arr, end_arr = start_logits.cpu().detach().numpy(), end_logits.cpu().detach().numpy()
-        best_start_idxs, best_end_idxs = self._get_best_preds_starts_ends(start_arr, end_arr)
-        conved_grouped_by_sample = list(zip(best_start_idxs,
-                                            best_end_idxs))
+        best_start_idxs, best_end_idxs = self._get_best_preds_starts_ends(start_logits, end_logits)
+        preds_start_ends = list(zip(best_start_idxs,
+                                    best_end_idxs))
 
-        if not labels is None:
-            start, end = labels
-            start_and_end = start.cpu().detach().numpy(), end.cpu().detach().numpy()
-            zipped = list(zip(*start_and_end))
-            return conved_grouped_by_sample, zipped
-        return conved_grouped_by_sample
+        pred_text = self._text_from_token_idxs(preds_start_ends, src_features, src_labels)
 
-    def text_from_token_idxs(self, token_idxs, features):
-        # TODO: at the moment we tokenize text two times, have to postproc preds and make predictions in one function
+        if not src_labels is None:
+            contexts, questions = src_features
+            start_idxs, end_idxs = src_labels
+            ground_truth_text = self._crop_text_by_idxs(contexts, start_idxs, end_idxs)
+            return pred_text, ground_truth_text
+        return pred_text
+
+    def _fill_zeros_out_of_context(self, predictions, src_features, src_labels=None):
+        start_preds, end_preds = predictions
+        tokenized = self._tokenize(*src_features)
+        if not src_labels is None:
+            tokenized, _ = self._filter_samples(tokenized, src_labels)
+        for text_idx, text_token_types in enumerate(tokenized["token_type_ids"]):
+            question_start_idx = list(text_token_types).index(1)
+            start_preds[text_idx, question_start_idx:] = 0
+            end_preds[text_idx, question_start_idx:] = 0
+        return start_preds, end_preds
+
+    def _filter_samples(self, tokenized, labels):
+        # TODO: uncomment
+        # is_in_context = self._check_answer_span_is_in_context(tokenized, labels)
+        # # filtered_tokenized = np.split(np.array(tokenized)[is_in_context], 1, axis=0)
+        # # filtered_labels = np.split(np.array(labels)[:, is_in_context], 1, axis=0)
+        # filtered_labels = []
+        # for label_categ in labels:
+        #     filt_categ = np.array(label_categ)[is_in_context]
+        #     filtered_labels.append(filt_categ)
+        #
+        # filtered_tokenized = {}
+        # for key, val in tokenized.items():
+        #     filtered_val = val[is_in_context]
+        #     filtered_tokenized[key] = filtered_val
+        #
+        # return filtered_tokenized, filtered_labels
+        return tokenized, labels
+
+    def _check_answer_span_is_in_context(self, tokenized, labels) -> np.array:
+        # TODO: we don't need answer_start_tokens but forced to do so!
+        text_end_chars = tokenized["offset_mapping"][:, :, 1].max(axis=1)
+        label_start_chars, label_end_chars = labels
+        is_in_context = np.array(label_end_chars) < text_end_chars
+        return is_in_context
+
+    def _crop_text_by_idxs(self, texts, starts, ends):
+        cropped = []
+
+        assert(len(texts) == len(starts) and len(starts) == len(ends))
+        for text, start, end in zip(texts, starts, ends):
+            cropped.append(text[start: end])
+        return cropped
+
+    def _text_from_token_idxs(self, token_idxs, features, labels=None):
         texts, questions = features
-        offset_mapping = self._tokenize(list(texts))["offset_mapping"]
+        # offset_mapping = self._tokenize(list(texts))["offset_mapping"]
+        tokenized = self._tokenize(list(texts))
+        if not labels is None:
+            tokenized, _ = self._filter_samples(tokenized, labels)
+        offset_mapping = tokenized["offset_mapping"]
+
         answers = []
+        assert(len(texts) == len(token_idxs) and len(token_idxs) == len(offset_mapping))
         for orig_text, (start, end), mapping in zip(texts, token_idxs, offset_mapping):
-            # TODO: at the moment if answer start and end are in [PAD] part, then we return full text, should fix it somehow
             answer_start_char = mapping[int(start), 0]
             answer_end_char = mapping[int(end), 1]
             if answer_end_char == 0:
@@ -60,16 +111,18 @@ class QADataProcessor:
                                  max_length=self.maxlen,
                                  padding="max_length",
                                  truncation=True,
-                                 return_tensors="pt",
+                                 return_tensors="np",
                                  return_offsets_mapping=True)
 
         return encoded
 
     def _char_idxs_to_token_idxs(self, char_idxs, tokenizer_out):
-        # TODO: refactor and fix
+        # TODO: take realisation from google repo
         start_chars, end_chars = char_idxs
         tokens_positions = tokenizer_out["offset_mapping"]
         start_tokens, end_tokens = [], []
+
+        assert(len(start_chars) == len(end_chars) and len(end_chars) == len(tokens_positions))
         for start_idx, end_idx, text_positions in zip(start_chars, end_chars, tokens_positions):
             text_token_starts, text_token_ends = zip(*text_positions)
             if end_idx <= max(text_token_ends):
@@ -79,7 +132,7 @@ class QADataProcessor:
                 token_end = text_token_ends.index(nearest_end)
             else:
                 # answer not in context
-                token_start, token_end = 0, 0  # TODO: fix it filtering samples like these
+                raise ValueError(f"end_idx is wrong: {end_idx, max(text_token_ends)}")
             start_tokens.append(token_start)
             end_tokens.append(token_end)
 
@@ -113,6 +166,7 @@ class QADataProcessor:
         Finds best start and end token idxs, whose sum of probabilities is maximized (check BERT paper for more
         info).
         """
+        start_logits, end_logits = start_logits.cpu().detach().numpy(), end_logits.cpu().detach().numpy()
         maximums = np.zeros(len(start_logits))
         best_start_idxs = np.zeros(len(start_logits))
         best_end_idxs = np.zeros(len(start_logits))

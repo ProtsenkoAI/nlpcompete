@@ -14,12 +14,13 @@ import torch
 config = TestsConfig()
 
 
-def get_trainer(weights_updater_kwargs={}, **trainer_kwargs):
+def get_trainer(weights_updater_kwargs={}):
     loader_builder = get_loader_builder()
     validator = get_validator()
     weights_updater = get_weights_updater(**weights_updater_kwargs)
+    saver = get_local_saver()
 
-    trainer = Trainer(validator, loader_builder, weights_updater)
+    trainer = Trainer(validator, loader_builder, weights_updater, saver)
     return trainer
 
 

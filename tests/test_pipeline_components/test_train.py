@@ -1,6 +1,7 @@
 import unittest
 
 from pipeline_components.train import Trainer
+from model_level.managing_model import ModelManager
 from tests.helpers import config, std_objects
 from tests.test_pipeline_components import weights_helpers
 
@@ -24,11 +25,10 @@ class TestTrainer(unittest.TestCase):
         self.assertIsInstance(shared_objs.trainer, Trainer)
 
     def test_fit_and_eval(self):
-        train = std_objects.get_train_dataset(nrows=3)
-        val = std_objects.get_val_dataset(nrows=3)
+        dataset = std_objects.get_train_dataset(nrows=10)
 
         old_weights = weights_helpers.get_weights(shared_objs.model)
-        shared_objs.trainer.fit(train, val, shared_objs.manager, max_step=2, steps_betw_evals=1)
+        shared_objs.trainer.fit(dataset, shared_objs.manager, max_step=2, steps_betw_evals=1, test_size=0.1)
         eval_vals = shared_objs.trainer.get_eval_vals()
         self.assertGreater(len(eval_vals), 0, "validation was not conducted during training")
         self.assertTrue(isinstance(eval_vals[0], (float, int)))
@@ -36,3 +36,7 @@ class TestTrainer(unittest.TestCase):
 
         weights_equal = weights_helpers.check_weights_equal(old_weights, new_weights)
         self.assertFalse(weights_equal, "training doesn't affect weights")
+
+        del shared_objs.model, shared_objs.manager
+        best_manager = shared_objs.trainer.load_best_manager()
+        self.assertIsInstance(best_manager, ModelManager)

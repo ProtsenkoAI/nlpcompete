@@ -34,28 +34,15 @@ class TestQADataProcessor(unittest.TestCase):
 
     def test_postprocess_unlabeled(self):
         preds = self._imitate_preds()
-        postproc_preds = shared_objs.processor.postprocess(preds)
+        postproc_preds = shared_objs.processor.postprocess(preds, shared_objs.features)
         self.assertIsInstance(postproc_preds, list)
         self.assertEqual(len(postproc_preds), shared_objs.batch_size)
 
     def test_postprocess_labeled(self):
         preds = self._imitate_preds()
-        _, preproc_labels = shared_objs.processor.preprocess(shared_objs.features, shared_objs.labels)
-        _, postproc_labels = shared_objs.processor.postprocess(preds, preproc_labels)
-        self.assertEqual(shared_objs.batch_size, len(postproc_labels))
-        self.assertEqual(2, len(postproc_labels[0]))
-
-    def test_text_from_token_ids(self):
-        preds = self._imitate_preds()
-        _, preproc_labels = shared_objs.processor.preprocess(shared_objs.features, shared_objs.labels)
-        postproc_preds, postproc_labels = shared_objs.processor.postprocess(preds, preproc_labels)
-
-        ground_truth_text = shared_objs.processor.text_from_token_idxs(postproc_labels, shared_objs.features)
-        pred_answers = shared_objs.processor.text_from_token_idxs(postproc_preds, shared_objs.features)
-        for true_answer in ground_truth_text[:3]:
-            self.assertIsInstance(true_answer, str)
-        for predict in pred_answers[:3]:
-            self.assertIsInstance(predict, str)
+        _, postproc_labels_texts = shared_objs.processor.postprocess(preds, shared_objs.features, shared_objs.labels)
+        self.assertEqual(shared_objs.batch_size, len(postproc_labels_texts))
+        self.assertIsInstance(postproc_labels_texts[0], str)
 
     def _imitate_preds(self):
         seq_len = 512

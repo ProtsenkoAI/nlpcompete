@@ -17,8 +17,8 @@ class SharedObjects:
         self.features = (["lul it's context"] * self.batch_size,
                          ["some question?"] * self.batch_size
                          )
-        self.labels = ([101] * self.batch_size,
-                       [202] * self.batch_size
+        self.labels = ([2] * self.batch_size,
+                       [6] * self.batch_size
                        )
 
 
@@ -34,8 +34,8 @@ class TestModelManager(unittest.TestCase):
         self.assertEqual(len(shared_objs.features[0]), len(start_preds))
 
     def test_preproc_forward_labeled(self):
-        _, (proc_start_idxs, proc_end_idxs) = shared_objs.mod_manager.preproc_forward(shared_objs.features,
-                                                                                      shared_objs.labels)
+        batch = (shared_objs.features, shared_objs.labels)
+        _, (proc_start_idxs, proc_end_idxs) = shared_objs.mod_manager.preproc_forward(*batch)
 
         self.assertIsInstance(proc_start_idxs, torch.Tensor)
         self.assertIsInstance(proc_end_idxs, torch.Tensor)
@@ -47,10 +47,19 @@ class TestModelManager(unittest.TestCase):
         self.assertFalse(weights_helpers.check_weights_equal(old_weights, new_weights))
 
     def test_predict_postproc(self):
-        answer_start_end_idxs = shared_objs.mod_manager.predict_get_text(
+        answer_start_end_idxs = shared_objs.mod_manager.predict_postproc(
             shared_objs.features
         )
         self.assertEqual(len(answer_start_end_idxs), shared_objs.batch_size)
+
+    def test_predict_get_text_labeled(self):
+        batch = (shared_objs.features, shared_objs.labels)
+        pred_texts, true_texts = shared_objs.mod_manager.predict_postproc(*batch)
+        self.assertEqual(len(pred_texts), shared_objs.batch_size)
+        self.assertEqual(len(true_texts), shared_objs.batch_size)
+
+        self.assertIsInstance(pred_texts[0], str)
+        self.assertIsInstance(true_texts[0], str)
 
     def test_save_then_load(self):
         saver = std_objects.get_local_saver()

@@ -74,7 +74,6 @@ class TransformerQA(nn.Module):
         self.transformer = self._load_transformer()
         for layer in self.head.children():
             if hasattr(layer, 'reset_parameters'):
-                print("RESETTING", layer)
                 layer.reset_parameters()
 
         if not device is None:
