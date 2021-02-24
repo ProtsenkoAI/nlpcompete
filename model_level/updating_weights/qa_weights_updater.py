@@ -2,7 +2,6 @@ from torch import optim
 from torch import nn
 from torch.cuda import amp
 import transformers
-from time import time
 
 
 class QAWeightsUpdater:

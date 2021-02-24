@@ -5,10 +5,11 @@ import numpy as np
 
 class QADataProcessor:
     # TODO: the class is too large, maybe add assistant components
-    def __init__(self, mname):
+    def __init__(self, mname, max_answer_token_len=50):
         self.mname = mname
         self.tokenizer = transformers.AutoTokenizer.from_pretrained(mname)
         self.maxlen = 512
+        self.max_answer_token_len = max_answer_token_len
 
     def get_init_kwargs(self):
         return {"mname": self.mname}
@@ -100,8 +101,8 @@ class QADataProcessor:
         for orig_text, (start, end), mapping in zip(texts, token_idxs, offset_mapping):
             answer_start_char = mapping[int(start), 0]
             answer_end_char = mapping[int(end), 1]
-            if answer_end_char == 0:
-                answer_end_char = len(orig_text)
+            # if answer_end_char == 0:
+            #     answer_end_char = len(orig_text)
             answer = orig_text[answer_start_char: answer_end_char]
 
             answers.append(answer)
@@ -174,7 +175,7 @@ class QADataProcessor:
 
         for token_idx in range(start_logits.shape[1]):
             token_start_probs = start_logits[:, token_idx]
-            right_end_probs = end_logits[:, token_idx:]
+            right_end_probs = end_logits[:, token_idx:token_idx + self.max_answer_token_len]
             right_argmaxes = np.argmax(right_end_probs, axis=-1) + token_idx
             right_max_vals = np.max(right_end_probs)
             curr_sum_prob = token_start_probs + right_max_vals
