@@ -31,6 +31,7 @@ class QAWeightsUpdater:
                                      lr=self.lr, weight_decay=self.weight_decay)
 
         total_steps = nb_train_steps // self.accum_iters
+        total_steps = max(total_steps, 1)  # if nb_train_steps < self.accum_iters
         self.lr_scheduler = transformers.get_polynomial_decay_schedule_with_warmup(optimizer=self.optimizer,
                                                                                    num_warmup_steps=self.warmup,
                                                                                    num_training_steps=total_steps,

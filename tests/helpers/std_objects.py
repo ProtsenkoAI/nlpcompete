@@ -14,8 +14,8 @@ import torch
 config = TestsConfig()
 
 
-def get_trainer(weights_updater_kwargs={}):
-    loader_builder = get_loader_builder()
+def get_trainer(batch_size=config.batch_size, weights_updater_kwargs={}):
+    loader_builder = get_loader_builder(batch_size=batch_size)
     validator = get_validator()
     weights_updater = get_weights_updater(**weights_updater_kwargs)
     saver = get_local_saver()
@@ -60,8 +60,8 @@ def get_subm_dataset(container=None, nrows=10):
     return SubmDataset(container)
 
 
-def get_loader_builder():
-    return DataLoaderSepPartsBuilder(config.batch_size)
+def get_loader_builder(batch_size=config.batch_size):
+    return DataLoaderSepPartsBuilder(batch_size)
 
 
 def get_loader(dataset=None):

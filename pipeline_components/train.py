@@ -86,6 +86,7 @@ class Trainer:
                 return True
 
     def _calc_num_train_steps(self, max_epoch, max_step, steps_in_epoch):
+        # TODO: add stop_patience support
         if max_step is None and max_epoch is None:
             raise ValueError
         elif max_step is None:
