@@ -1,4 +1,5 @@
 from pipeline_components.train import Trainer
+from pipeline_components.pipelines.qa_fit_eval_pipeline import QATrainEvalPipeline
 from model_level.models.transformer_qanda import TransformerQA
 from model_level.evaluating import Validator
 from model_level.managing_model import ModelManager
@@ -87,3 +88,13 @@ def get_model_manager(model=None, device=None):
 
 def get_local_saver(**kwargs):
     return LocalSaver(**kwargs)
+
+
+def get_fit_eval_pipeline():
+    pipeline = QATrainEvalPipeline(config.train_path, config.model_name, config.save_dir,
+                                   config.device, config.batch_size,
+                                   trainer_fit_kwargs={"max_step": 2, "steps_betw_evals": 1, "test_size": 0.5},
+                                   weights_updater_standard_kwargs={},
+                                   model_standard_kwargs={},
+                                   nrows=2)
+    return pipeline

@@ -23,9 +23,11 @@ class Submitter:
 
             ids += list(quest_ids)
             answers += pred_tokens
+            # print("example of answers", answers)
         return ids, answers
 
     def _form_submission(self, ids, answers):
+        assert(len(ids) == len(answers))
         return dict(zip(ids, answers))
 
     def _write_subm_json(self, file_name, data):

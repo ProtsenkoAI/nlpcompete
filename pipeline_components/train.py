@@ -52,9 +52,10 @@ class Trainer:
         manager.get_model().eval()
         eval_value = self.validator.eval(manager, dataset)
         safe_max = 0
+        print("_eval. Eval_value:", eval_value)
         if len(self.eval_vals) > 0:
             safe_max = max(self.eval_vals)
-        if eval_value > safe_max:
+        if eval_value >= safe_max:
             self.best_model_name = manager.save_model(self.saver)
         self.eval_vals.append(eval_value)
         manager.get_model().train()

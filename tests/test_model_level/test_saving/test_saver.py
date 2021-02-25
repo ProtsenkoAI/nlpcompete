@@ -1,6 +1,6 @@
 import unittest
 
-from ...helpers import config, std_objects
+from ...helpers import config, std_objects, weights_helpers
 
 config = config.TestsConfig()
 
@@ -20,10 +20,15 @@ class TestLocalSaver(unittest.TestCase):
         model = std_objects.get_model()
         name = shared_objs.saver.save(model, shared_objs.processor)
         type_old_model = type(model)
+        old_weights = weights_helpers.get_weights(model)
         del model
         model_loaded, proc_loaded = shared_objs.saver.load(name)
         self.assertEqual(type(model_loaded), type_old_model)
         self.assertEqual(type(shared_objs.processor), type(proc_loaded))
+
+        new_weights = weights_helpers.get_weights(model_loaded)
+        weights_equal = weights_helpers.check_weights_equal(old_weights, new_weights)
+        self.assertTrue(weights_equal)
 
     def test_save_multiple_model(self):
         model = std_objects.get_model()

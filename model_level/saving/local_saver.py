@@ -33,6 +33,7 @@ class LocalSaver:
     def load(self, name):
         meta, state_dict = self._load_meta_and_state(name)
         model = TransformerQA(**meta["model_meta"])
+        model.load_state_dict(state_dict)
         processor = QADataProcessor(**meta["processor_meta"])
         return model, processor
 

@@ -2,8 +2,7 @@ import unittest
 
 from pipeline_components.train import Trainer
 from model_level.managing_model import ModelManager
-from tests.helpers import config, std_objects
-from tests.test_pipeline_components import weights_helpers
+from tests.helpers import config, std_objects, weights_helpers
 
 config = config.TestsConfig()
 
@@ -26,6 +25,7 @@ class TestTrainer(unittest.TestCase):
         self.assertIsInstance(shared_objs.trainer, Trainer)
 
     def test_fit_and_eval(self):
+        print("test_fit_and_eval")
         dataset = std_objects.get_train_dataset(nrows=10)
 
         old_weights = weights_helpers.get_weights(shared_objs.model)
@@ -44,7 +44,7 @@ class TestTrainer(unittest.TestCase):
         self.assertIsInstance(best_manager, ModelManager)
 
     def test_full_dataset(self):
-        very_large_int = 10 * 10 ** 12
-        dataset = std_objects.get_train_dataset(nrows=very_large_int)
+        # very_large_int = 10 * 10 ** 12
+        dataset = std_objects.get_train_dataset(nrows=20 * config.batch_size)
         print("starting test_full_dataset")
-        shared_objs.trainer.fit(dataset, shared_objs.manager, max_step=15, steps_betw_evals=10, test_size=0.2) # TODO: 10 -> 1000
+        shared_objs.trainer.fit(dataset, shared_objs.manager, max_step=15, steps_betw_evals=10, test_size=0.2)

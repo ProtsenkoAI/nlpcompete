@@ -1,7 +1,7 @@
 import unittest
 
-from tests.test_pipeline_components import weights_helpers
-from tests.helpers import config, std_objects
+from tests.helpers import config, std_objects, weights_helpers
+
 config = config.TestsConfig()
 
 
