@@ -8,7 +8,7 @@ from ..types.dataset import SampleWithAnswers, SampleFeatures, SampleFeaturesWit
 
 class StandardDataset(SizedDataset):
     def __init__(self, container: DataContainer):
-        data = container.get_data()     
+        data = container.get_data()
         self.samples = self._get_samples(data)
 
     def _get_samples(self, data: List[ParsedParagraph]) -> List[SampleWithAnswers]:

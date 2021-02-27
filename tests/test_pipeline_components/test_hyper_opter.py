@@ -9,7 +9,7 @@ config = config.TestsConfig()
 
 class SharedObjects:
     def __init__(self):
-        self.pipeline = std_objects.get_fit_eval_pipeline()
+        self.pipeline = std_objects.get_qa_pipeline()
         weights_updater_space = {"lr": hp.loguniform("lr", log(1e-7), log(1e-2)),
                                  }
         model_space = {"head_nneurons": hp.quniform("head_nneurons", 50, 1000, q=50)
@@ -28,8 +28,8 @@ class TestHyperOpter(unittest.TestCase):
         def run_pipeline_get_best_res(hopt_chosen_params):
             weights_kwargs = hopt_chosen_params["weights_updater_kwargs"]
             model_kwargs = hopt_chosen_params["model_kwargs"]
-            eval_vals = shared_objs.pipeline.run(weights_updater_kwargs=weights_kwargs,
-                                                 model_kwargs=model_kwargs)
+            eval_vals = shared_objs.pipeline.train_get_eval_vals(weights_updater_kwargs=weights_kwargs,
+                                                                 model_kwargs=model_kwargs)
             return max(eval_vals)
 
         hyper_opter = HyperOpter(func=run_pipeline_get_best_res,

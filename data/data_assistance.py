@@ -36,8 +36,8 @@ class DataAssistant:
 
         return generator()
 
-    def get_without_split(self, dataset):
-        return self._create_loader_with_answers(dataset)
+    def get_without_split(self, dataset, has_answers=True):
+        return self._create_loader_with_answers(dataset, has_answers=has_answers)
 
     def _split_train_val_create_loaders(self, dataset, train_idxs, test_idxs
                                         ) -> Tuple[torch_data.DataLoader, torch_data.DataLoader]:
@@ -48,5 +48,5 @@ class DataAssistant:
         return train_loader, test_loader
 
 
-    def _create_loader_with_answers(self, dataset) -> torch_data.DataLoader:
-        return self.loader_builder.build(dataset, has_answers=True)
+    def _create_loader_with_answers(self, dataset, has_answers=True) -> torch_data.DataLoader:
+        return self.loader_builder.build(dataset, has_answers=has_answers)

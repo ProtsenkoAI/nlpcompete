@@ -13,8 +13,7 @@ class SharedObjects:
     def __init__(self):
         self.model = std_objects.get_model()
         self.manager = std_objects.get_model_manager(self.model)
-        self.trainer = std_objects.get_trainer(weights_updater_kwargs={"accum_iters": 3},
-                                               batch_size=8)
+        self.trainer = std_objects.get_trainer(weights_updater_kwargs={"accum_iters": 3})
 
 
 shared_objs = SharedObjects()

@@ -16,7 +16,7 @@ from model_level.managing_model import ModelManager
 from pipeline_components.train import Trainer
 
 
-class QATrainEvalPipeline:
+class QAPipeline:
     """Intended to define unchanging task-related pipeline values once and then
     do all operations providing needed parameters (esp. model and training architecture).
     Also supports standard kwargs passed to objects that can be redifined in run().
