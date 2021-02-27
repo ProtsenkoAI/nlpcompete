@@ -9,7 +9,7 @@ class TestsConfig:
         self.project_root = self.config_path.parents[depth_from_root]
         self.data_dir = self.project_root / "data"
 
-        self.save_dir = "./"
+        self.save_dir = "./saved_models/"
 
         self.device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
         self.train_path = str(self.data_dir / "sbersquad_train.json")

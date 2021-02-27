@@ -26,10 +26,10 @@ class TestTrainer(unittest.TestCase):
 
     def test_fit_and_eval(self):
         print("test_fit_and_eval")
-        dataset = std_objects.get_train_dataset(nrows=10)
-
+        dataset = std_objects.get_train_dataset(nrows=2)
+        train_loader, val_loader = std_objects.get_data_assistant().train_test_split(dataset, test_size=0.1)
         old_weights = weights_helpers.get_weights(shared_objs.model)
-        shared_objs.trainer.fit(dataset, shared_objs.manager, max_step=2, steps_betw_evals=1, test_size=0.1)
+        shared_objs.trainer.fit(train_loader, val_loader, shared_objs.manager, max_step=2, steps_betw_evals=1)
         eval_vals = shared_objs.trainer.get_eval_vals()
         self.assertGreater(len(eval_vals), 0, "validation was not conducted during training")
         self.assertTrue(isinstance(eval_vals[0], (float, int)))
@@ -44,7 +44,7 @@ class TestTrainer(unittest.TestCase):
         self.assertIsInstance(best_manager, ModelManager)
 
     def test_full_dataset(self):
-        # very_large_int = 10 * 10 ** 12
         dataset = std_objects.get_train_dataset(nrows=20 * config.batch_size)
+        train_loader, val_loader = std_objects.get_data_assistant().train_test_split(dataset, test_size=0.1)
         print("starting test_full_dataset")
-        shared_objs.trainer.fit(dataset, shared_objs.manager, max_step=15, steps_betw_evals=10, test_size=0.2)
+        shared_objs.trainer.fit(train_loader, val_loader, shared_objs.manager, max_step=15, steps_betw_evals=10)

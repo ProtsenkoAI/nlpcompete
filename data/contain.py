@@ -1,20 +1,22 @@
-from typing import Iterable
-import pandas as pd
-import os
+from typing import Optional, List
+
+from .types.raw import TrainQuestion, TrainAnswer
+from .types.parsed import ParsedAnswer, ParsedQuestionAnswers, ParsedParagraph
+
 import json
 
 
 class DataContainer:
-    def __init__(self, path, nrows=None):
+    def __init__(self, path: str, nrows: Optional[int] = None):
         self.path = path
         self.nrows = nrows
 
-    def get_data(self):
+    def get_data(self) -> List[ParsedParagraph]:
         data = self._parse_file(self.path)
         return data
 
-    def _parse_file(self, path):
-        texts_and_questions = []
+    def _parse_file(self, path: str) -> List[ParsedParagraph]:
+        texts_and_questions: List[ParsedParagraph] = []
         data_lines = self._read_data_lines(path)
         for line in data_lines:
             text, questions_info = self._get_text_and_questions_info(line)
@@ -35,12 +37,13 @@ class DataContainer:
             question = question_with_answers["question"]
             answers = self._get_answers(question_with_answers)
             quest_id = question_with_answers["id"]
-            
-            question_data = {"id": quest_id, "answers": answers}
+
+            question_data = ParsedQuestionAnswers(id=quest_id, answers=answers)
             questions_and_answers.append((question, question_data))
         return text, questions_and_answers
 
-    def _get_answers(self, qna):
+
+    def _get_answers(self, qna: TrainQuestion) -> List[ParsedAnswer]:
         answers = []
         for answer in qna["answers"]:
             txt = self._parse_answer(answer)
@@ -48,8 +51,8 @@ class DataContainer:
 
         return answers
 
-    def _parse_answer(self, answer):
-        answer_lenght = len(answer["text"])
+    def _parse_answer(self, answer: TrainAnswer) -> ParsedAnswer:
+        answer_length = len(answer["text"])
         start_idx = answer["answer_start"]
-        end_idx = start_idx + answer_lenght
+        end_idx = start_idx + answer_length
         return start_idx, end_idx

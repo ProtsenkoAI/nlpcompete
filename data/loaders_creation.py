@@ -1,5 +1,4 @@
 import torch.utils.data as torch_data
-import torch
 
 
 class DataLoaderSepPartsBuilder:

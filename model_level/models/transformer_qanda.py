@@ -1,13 +1,17 @@
 import transformers
-import os.path as path
 import torch.nn as nn
 import torch
+
+from typing import Tuple, List, Union
 
 
 class TransformerQA(nn.Module):
     # TODO: (architecture) make transformer model to be a composition of transformer and head
-    def __init__(self, mname, cache_dir="./cache_models/",
+    def __init__(self, mname: str, cache_dir="./cache_models/",
                  droprate=0.3, head_nlayers=1, head_nneurons=768):
+        """
+        :param mname: a Model name listed in https://huggingface.co/models
+        """
         super().__init__()
         self.mname = mname
         self.cache_dir = cache_dir
@@ -28,11 +32,17 @@ class TransformerQA(nn.Module):
                 "head_nlayers": self.head_nlayers,
                 "head_nneurons": self.head_nneurons}
 
-    def _get_transformer_out_size(self, model):
-        config = model.config.to_dict()
+    def _get_transformer_out_size(self, transformer: transformers.PreTrainedModel) -> int:
+        """To create head of model we need to know output shape of transformer that's dependent on
+        transformer that is being used. If it's"""
+        config = transformer.config.to_dict()
         return config["hidden_size"]
 
-    def forward(self, transformer_inputs):
+    def forward(self, transformer_inputs: Tuple[torch.Tensor, ...]) -> Tuple[torch.Tensor, torch.Tensor]:
+        """
+
+        :return: tuple with (start token probabilities, end token probabilities)
+        """
         x = self.transformer(*transformer_inputs)
         x = x["last_hidden_state"]  # be attentive: last_hidden_state isn't used for classification
         x = self.head(x)
@@ -42,7 +52,7 @@ class TransformerQA(nn.Module):
         end_logits = end_logits.squeeze(-1)
         return start_logits, end_logits
 
-    def _create_head(self, droprate, n_layers, head_nneurons):
+    def _create_head(self, droprate: float, n_layers: int, head_nneurons: int) -> nn.Module:
         head_layers = []
     
         for layer_idx in range(n_layers):
@@ -53,7 +63,8 @@ class TransformerQA(nn.Module):
 
         return nn.Sequential(*head_layers)
 
-    def _create_head_layer_components(self, is_first, is_last, droprate, nneurons):
+    def _create_head_layer_components(self, is_first: bool, is_last: bool, droprate: float, nneurons: int
+                                      ) -> List[nn.Module]:
         inp_hidden_size, out_hidden_size = nneurons, nneurons
         if is_first: 
             inp_hidden_size = self.transformer_out_size
@@ -70,7 +81,7 @@ class TransformerQA(nn.Module):
             
         return comps
 
-    def reset_weights(self, device=None):
+    def reset_weights(self, device:Union[None, torch.device]=None) -> None:
         self.transformer = self._load_transformer()
         for layer in self.head.children():
             if hasattr(layer, 'reset_parameters'):
@@ -79,11 +90,11 @@ class TransformerQA(nn.Module):
         if not device is None:
             self.to(device)
 
-    def _load_transformer(self):
+    def _load_transformer(self) -> transformers.PreTrainedModel:
         return transformers.AutoModel.from_pretrained(self.mname, cache_dir=self.cache_dir)
 
-    def get_head(self):
+    def get_head(self) -> nn.Module:
         return self.head
 
-    def get_transformer(self):
+    def get_transformer(self) -> transformers.PreTrainedModel:
         return self.transformer

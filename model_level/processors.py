@@ -1,20 +1,28 @@
 import transformers
 import torch
 import numpy as np
+from typing import Tuple, List, Union
 
+
+UnprocFeatures = Tuple[List[str], List[str]]
+UnprocLabels = Tuple[List[int], List[int]]
+ProcFeatures = Tuple[torch.Tensor, torch.Tensor, torch.Tensor]
+TrueTokenIdxs = Tuple[List[int], List[int]]
+ProcLabels = Tuple[torch.Tensor, torch.Tensor]
 
 class QADataProcessor:
     # TODO: the class is too large, maybe add assistant components
-    def __init__(self, mname, max_answer_token_len=50):
+    def __init__(self, mname: str, max_answer_token_len=50):
         self.mname = mname
         self.tokenizer = transformers.AutoTokenizer.from_pretrained(mname)
         self.maxlen = 512
         self.max_answer_token_len = max_answer_token_len
 
-    def get_init_kwargs(self):
+    def get_init_kwargs(self) -> dict:
         return {"mname": self.mname}
 
-    def preprocess(self, features, labels=None, device=None):
+    def preprocess(self, features: UnprocFeatures, labels: Union[None, UnprocLabels]=None, device: torch.device=None
+                   ) -> Union[ProcFeatures, Tuple[ProcFeatures, ProcLabels]]:
         tokenized = self._tokenize(*features)
         if not labels is None:
             tokenized, labels = self._filter_samples(tokenized, labels)
@@ -51,7 +59,7 @@ class QADataProcessor:
             end_preds[text_idx, question_start_idx:] = 0
         return start_preds, end_preds
 
-    def _filter_samples(self, tokenized, labels, other_arrays=[]):
+    def _filter_samples(self, tokenized, labels, other_arrays=()):
         """
         :param tokenized:
         :param labels:
@@ -140,20 +148,22 @@ class QADataProcessor:
 
         return start_tokens, end_tokens
 
-    def _preproc_labels(self, labels, device):
+    def _preproc_labels(self, labels: TrueTokenIdxs, device) -> ProcLabels:
         labels_proc = self._create_tensors(labels, device)
-        return labels_proc
+        assert len(labels_proc) == 2
+        return tuple(labels_proc)
 
-    def _features_from_tokenized(self, tokenizer_out, device):
+    def _features_from_tokenized(self, tokenizer_out, device) -> ProcFeatures:
         # maybe later we'll need a tokenizer wrapper to return this parts
         needed_parts = [tokenizer_out["input_ids"],
                         tokenizer_out["attention_mask"],
                         tokenizer_out["token_type_ids"]
                         ]
         tensors = self._create_tensors(needed_parts, device)
-        return tensors
+        assert len(tensors) == 3
+        return tuple(tensors)
 
-    def _create_tensors(self, arrays, device):
+    def _create_tensors(self, arrays, device) -> List[torch.Tensor]:
         tensors = []
         for arr in arrays:
             if not isinstance(arr, torch.Tensor):
