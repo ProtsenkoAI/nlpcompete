@@ -3,6 +3,8 @@ from pipeline_components.pipelines.qa_fit_eval_pipeline import QATrainEvalPipeli
 from model_level.models.transformer_qanda import TransformerQA
 from model_level.evaluating import Validator
 from model_level.managing_model import ModelManager
+from model_level.ensemble.blending import BlendingModelManager
+from model_level.ensemble.unbatching_processor import UnbatchingProcessor
 from model_level.updating_weights.qa_weights_updater import QAWeightsUpdater
 from data.contain import DataContainer
 from data.loaders_creation import DataLoaderSepPartsBuilder
@@ -103,3 +105,11 @@ def get_fit_eval_pipeline():
 def get_data_assistant():
     loader_creator = get_loader_builder()
     return DataAssistant(loader_creator)
+
+
+def get_unbatching_processor() -> UnbatchingProcessor:
+    return UnbatchingProcessor()
+
+
+def get_blending_model_manager(**kwargs) -> BlendingModelManager:
+    return BlendingModelManager(**kwargs)
