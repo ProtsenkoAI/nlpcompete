@@ -1,6 +1,10 @@
+from collections import Collection
+
+
 from data.contain import DataContainer
 from data.datasets.standard_dataset import StandardDataset
 from data.loaders_creation import DataLoaderSepPartsBuilder
+from data.data_assistance import DataAssistant
 
 from model_level.saving.local_saver import LocalSaver
 from model_level.models.transformer_qanda import TransformerQA
@@ -26,9 +30,10 @@ class QATrainEvalPipeline:
         """Creates unchanging objects and saved params"""
         train_container = DataContainer(path=train_path, nrows=nrows)
         self.train_dataset = StandardDataset(train_container)
+        loader_builder = DataLoaderSepPartsBuilder(batch=batch_size)
+        self.data_assistant = DataAssistant(loader_builder)
 
-        self.loader_builder = DataLoaderSepPartsBuilder(batch=batch_size)
-        self.validator = Validator(self.loader_builder)
+        self.validator = Validator()
         self.saver = LocalSaver(models_save_dir)
 
         self.trainer_fit_kwargs = trainer_fit_kwargs
@@ -38,14 +43,27 @@ class QATrainEvalPipeline:
         self.std_processor_kwargs = processor_standard_kwargs
         self.std_weights_kwargs = weights_updater_standard_kwargs
 
-    def run(self, weights_updater_kwargs, model_kwargs, processor_kwargs):
+    def run(self, weights_updater_kwargs=None, model_kwargs=None, processor_kwargs=None,
+                                    train_test_split_kwargs=None) -> list:
+
+        weights_updater_kwargs, model_kwargs, processor_kwargs, train_test_split_kwargs = \
+            self._set_to_dict_if_none(*weights_updater_kwargs, model_kwargs, processor_kwargs, train_test_split_kwargs)
+        train_loader, val_loader = self.data_assistant.train_test_split(self.train_dataset, **train_test_split_kwargs)
         manager = self._create_manager(model_kwargs, processor_kwargs)
         trainer = self._create_trainer(weights_updater_kwargs)
-        trainer.fit(self.train_dataset, manager, **self.trainer_fit_kwargs)
+        trainer.fit(train_loader, val_loader, manager, **self.trainer_fit_kwargs)
         val_scores = trainer.get_eval_vals()
         return val_scores
 
-    def _create_manager(self, run_model_kwargs, run_proc_kwargs):
+    def _set_to_dict_if_none(self, *args) -> Collection:
+        returned = []
+        for arg in args:
+            if arg is None:
+                arg = {}
+            returned.append(arg)
+        return returned
+
+    def _create_manager(self, run_model_kwargs, run_proc_kwargs) -> ModelManager:
         model_kwargs = self.std_model_kwargs.copy()
         model_kwargs.update(run_model_kwargs)
         proc_kwargs = self.std_processor_kwargs.copy()
@@ -56,9 +74,9 @@ class QATrainEvalPipeline:
 
         return ModelManager(model, proc, device=self.device)
 
-    def _create_trainer(self, run_weights_updater_kwargs):
+    def _create_trainer(self, run_weights_updater_kwargs) -> Trainer:
         weights_update_kwargs = self.std_weights_kwargs.copy()
         weights_update_kwargs.update(run_weights_updater_kwargs)
 
         weights_updater = QAWeightsUpdater(**weights_update_kwargs)
-        return Trainer(self.validator, self.loader_builder, weights_updater, self.saver)
+        return Trainer(self.validator, weights_updater, self.saver)

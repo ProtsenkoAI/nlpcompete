@@ -1,21 +1,23 @@
 import json
 import os
 from tqdm.notebook import tqdm
+from torch.utils.data import DataLoader
+
+from model_level.managing_model import ModelManager
+from typing import Tuple, Collection
 
 
 class Submitter:
-    def __init__(self, loader_builder, subm_dir="./"):
-        self.loader_builder = loader_builder
+    def __init__(self, subm_dir="./"):
         self.subm_dir = subm_dir
         os.makedirs(subm_dir, exist_ok=True)
 
-    def create_submission(self, model_manager, dataset, subm_file_name="submission"):
-        loader = self.loader_builder.build(dataset, has_answers=False)
+    def create_submission(self, model_manager: ModelManager, loader: DataLoader, subm_file_name="submission") -> None:
         ids, answers = self._get_question_ids_make_answers(loader, model_manager)
         subm_dict = self._form_submission(ids, answers)
         self._write_subm_json(subm_file_name, subm_dict)
 
-    def _get_question_ids_make_answers(self, loader, manager):
+    def _get_question_ids_make_answers(self, loader, manager) -> Tuple[Collection[int], Collection[str]]:
         ids, answers = [], []
         for features in tqdm(loader, desc="Making submit predictions"):
             quest_ids, contexts, questions = features
@@ -23,10 +25,9 @@ class Submitter:
 
             ids += list(quest_ids)
             answers += pred_tokens
-            # print("example of answers", answers)
         return ids, answers
 
-    def _form_submission(self, ids, answers):
+    def _form_submission(self, ids: Collection[int], answers: Collection[str]):
         assert(len(ids) == len(answers))
         return dict(zip(ids, answers))
 

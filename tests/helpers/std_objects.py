@@ -7,6 +7,7 @@ from model_level.updating_weights.qa_weights_updater import QAWeightsUpdater
 from data.contain import DataContainer
 from data.loaders_creation import DataLoaderSepPartsBuilder
 from data.datasets import StandardDataset, SubmDataset
+from data.data_assistance import DataAssistant
 from model_level.processors import QADataProcessor
 from model_level.saving.local_saver import LocalSaver
 from .config import TestsConfig
@@ -21,7 +22,7 @@ def get_trainer(batch_size=config.batch_size, weights_updater_kwargs={}):
     weights_updater = get_weights_updater(**weights_updater_kwargs)
     saver = get_local_saver()
 
-    trainer = Trainer(validator, loader_builder, weights_updater, saver)
+    trainer = Trainer(validator, weights_updater, saver)
     return trainer
 
 
@@ -36,7 +37,7 @@ def get_model(**model_kwargs):
 
 def get_validator():
     loader_builder = get_loader_builder()
-    return Validator(loader_builder)
+    return Validator()
 
 
 def get_container(path=None, nrows=10):
@@ -65,10 +66,10 @@ def get_loader_builder(batch_size=config.batch_size):
     return DataLoaderSepPartsBuilder(batch_size)
 
 
-def get_loader(dataset=None):
+def get_loader(dataset=None, has_answers=True):
     if dataset is None:
         dataset = get_train_dataset()
-    loader = get_loader_builder().build(dataset)
+    loader = get_loader_builder().build(dataset, has_answers=has_answers)
     return loader
 
 
@@ -93,8 +94,12 @@ def get_local_saver(**kwargs):
 def get_fit_eval_pipeline():
     pipeline = QATrainEvalPipeline(config.train_path, config.model_name, config.save_dir,
                                    config.device, config.batch_size,
-                                   trainer_fit_kwargs={"max_step": 2, "steps_betw_evals": 1, "test_size": 0.5},
+                                   trainer_fit_kwargs={"max_step": 2, "steps_betw_evals": 1},
                                    weights_updater_standard_kwargs={},
                                    model_standard_kwargs={},
                                    nrows=2)
     return pipeline
+
+def get_data_assistant():
+    loader_creator = get_loader_builder()
+    return DataAssistant(loader_creator)

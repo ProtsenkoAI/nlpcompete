@@ -1,9 +1,18 @@
 import torch
-from time import time
+from torch import nn
+from typing import Tuple, List, Union
 
+from model_level.processors import QADataProcessor
+from model_level.saving.local_saver import LocalSaver
+
+# TODO: move to types
+UnprocLabels = Union[None, Tuple[List[int], List[int]]]
+UnprocFeatures = Tuple[List[str], List[str]]
+ModelPreds = Tuple[torch.Tensor, torch.Tensor]
+ProcLabelsTokenIdxs = Tuple[torch.Tensor, torch.Tensor]
 
 class ModelManager:
-    def __init__(self, model, processor, device):
+    def __init__(self, model: nn.Module, processor: QADataProcessor, device: torch.device):
         self.model = model
         self.processor = processor
         if device is None:
@@ -11,14 +20,15 @@ class ModelManager:
         self.device = device
         self.model.to(self.device)
 
-    def get_model(self):
+    def get_model(self) -> nn.Module:
         return self.model
 
     def reset_model_weights(self):
         self.model.reset_weights()
         self.model.to(self.device)
 
-    def preproc_forward(self, features, labels=None):
+    def preproc_forward(self, features: UnprocFeatures, labels: UnprocLabels=None) -> Union[ModelPreds,
+                                                                                            Tuple[ModelPreds, ProcLabelsTokenIdxs]]:
         out = self.processor.preprocess(features, labels=labels, device=self.device)
         if labels is None:
             preds = self.model(out)
@@ -28,7 +38,8 @@ class ModelManager:
             preds = self.model(proc_feats)
             return preds, labels_proc
 
-    def predict_postproc(self, features, labels=None):
+    def predict_postproc(self, features: UnprocFeatures, labels: UnprocLabels=None) -> Union[Tuple[str],
+                                                                                             Tuple[Tuple[str], Tuple[str]]]:
         out = self.preproc_forward(features, labels)
         if labels is None:
             preds = out
@@ -39,11 +50,11 @@ class ModelManager:
             return postproc_preds, postproc_labels
         return postproc_preds
 
-    def save_model(self, saver):
+    def save_model(self, saver: LocalSaver) -> str:
         return saver.save(self.model, self.processor)
 
     @classmethod
-    def load(cls, saver, name, device=None):
+    def load(cls, saver: LocalSaver, name: str, device:Union[None, torch.device]=None):
         if device is None:
             device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
         model, processor = saver.load(name)

@@ -1,16 +1,16 @@
-from model_level.managing_model import ModelManager
-
-from torch.utils import data as torch_data
 import numpy as np
 from tqdm.notebook import tqdm
-from sklearn.model_selection import train_test_split
+from torch.utils.data import DataLoader
+from typing import Union
 
-from time import time
+from model_level.evaluating import Validator
+from model_level.updating_weights.qa_weights_updater import QAWeightsUpdater
+from model_level.saving.local_saver import LocalSaver
+from model_level.managing_model import ModelManager
 
 
 class Trainer:
-    def __init__(self, validator, loader_builder, weights_updater, saver):
-        self.loader_builder = loader_builder
+    def __init__(self, validator: Validator, weights_updater:  QAWeightsUpdater, saver: LocalSaver):
         self.validator = validator
         self.weights_updater = weights_updater
         self.saver = saver
@@ -21,14 +21,11 @@ class Trainer:
 
         self.best_model_name = None
 
-    def fit(self, dataset, model_manager, max_epoch=None, max_step=None,
-            stop_patience=2, steps_betw_evals=200, test_size=0.2):
-        train_idxs, test_idxs = train_test_split(np.arange(len(dataset)), test_size=test_size)
-        train_dataset = torch_data.Subset(dataset, train_idxs)
-        val_dataset = torch_data.Subset(dataset, test_idxs)
+    def fit(self, train_loader: DataLoader, val_loader: DataLoader, model_manager: ModelManager,
+            max_epoch:Union[None, int]=None, max_step:Union[None, int]=None,
+            stop_patience:Union[None, int]=2, steps_betw_evals=200):
 
         model_manager.reset_model_weights()
-        train_loader = self.loader_builder.build(train_dataset, has_answers=True)
         num_train_steps = self._calc_num_train_steps(max_epoch, max_step, len(train_loader))
         self.weights_updater.prepare_for_fit(model_manager, num_train_steps)
 
@@ -37,21 +34,21 @@ class Trainer:
             for batch in tqdm(train_loader):
                 if self._early_stopping(max_epoch, max_step, stop_patience):
                     return
-                loss_val = self.weights_updater.fit_with_batch(model_manager, batch)
+                loss_val = self.weights_updater.fit_with_batch(model_manager, batch)    
                 losses.append(loss_val)
 
                 if (self.step_nb + 1) % steps_betw_evals == 0:
-                    self._eval(model_manager, val_dataset)
+                    self._eval_save_if_need(model_manager, val_loader)
                     print("Mean losses:", np.mean(losses))
                     losses = []
                 
                 self.step_nb += 1
             self.epoch_nb += 1
 
-    def _eval(self, manager, dataset):
+    def _eval_save_if_need(self, manager, loader):
         manager.get_model().eval()
-        eval_value = self.validator.eval(manager, dataset)
-        safe_max = 0
+        eval_value = self.validator.eval(manager, loader)
+        safe_max = 0        
         print("_eval. Eval_value:", eval_value)
         if len(self.eval_vals) > 0:
             safe_max = max(self.eval_vals)
@@ -60,12 +57,12 @@ class Trainer:
         self.eval_vals.append(eval_value)
         manager.get_model().train()
 
-    def load_best_manager(self):
+    def load_best_manager(self) -> ModelManager:
         if self.best_model_name is None:
             raise ValueError("Model was not saved")
         return ModelManager.load(self.saver, self.best_model_name)
 
-    def _early_stopping(self, max_epoch, max_step, stop_patience):
+    def _early_stopping(self, max_epoch: int, max_step: int, stop_patience: int) -> bool:
         if not max_step is None:
             if self.step_nb >= max_step:
                 return True 
@@ -77,7 +74,7 @@ class Trainer:
             
         return False
 
-    def _exceeded_stopping_patience(self, stop_patience):
+    def _exceeded_stopping_patience(self, stop_patience) -> bool:
         steps_passed = len(self.eval_vals)
         enough_steps_passed = steps_passed > stop_patience
         if enough_steps_passed:
@@ -85,9 +82,9 @@ class Trainer:
             if (steps_passed - best_result_step - 1) >= stop_patience:
                 print("EARLY STOPPING", "eval_vals", self.eval_vals, "best_result_step", best_result_step)
                 return True
+        return False
 
-    def _calc_num_train_steps(self, max_epoch, max_step, steps_in_epoch):
-        # TODO: add stop_patience support
+    def _calc_num_train_steps(self, max_epoch, max_step, steps_in_epoch) -> int:
         if max_step is None and max_epoch is None:
             raise ValueError
         elif max_step is None:
@@ -95,5 +92,5 @@ class Trainer:
         else:
             return max_step
 
-    def get_eval_vals(self):
+    def get_eval_vals(self) -> list:
         return self.eval_vals

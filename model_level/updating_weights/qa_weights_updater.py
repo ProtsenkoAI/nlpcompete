@@ -1,12 +1,16 @@
+import torch
 from torch import optim
 from torch import nn
 from torch.cuda import amp
 import transformers
+from typing import List, Tuple
+
+from model_level.managing_model import ModelManager
 
 
 class QAWeightsUpdater:
     def __init__(self, lr=2e-5, weight_decay=1e-2, accum_iters=1, warmup=0, lr_end=1e-7,
-                 use_amp=False, ):
+                 use_amp=False):
 
         self.lr = lr
         self.weight_decay = weight_decay
@@ -25,7 +29,7 @@ class QAWeightsUpdater:
 
         self.step_idx = 0
 
-    def prepare_for_fit(self, model_manager, nb_train_steps):
+    def prepare_for_fit(self, model_manager: ModelManager, nb_train_steps: int):
         self.optimizer = optim.AdamW(model_manager.get_model().parameters(),
                                      lr=self.lr, weight_decay=self.weight_decay)
 
@@ -36,7 +40,8 @@ class QAWeightsUpdater:
                                                                                    num_training_steps=total_steps,
                                                                                    lr_end=self.lr_end)
 
-    def fit_with_batch(self, manager, batch):
+    def fit_with_batch(self, manager: ModelManager, batch: Tuple[Tuple[List[str], List[str]],
+                                                                 Tuple[List[int], List[int]]]) -> float:
         inputs, labels = batch
         loss = self._calc_loss(manager, inputs, labels)
         self._backward_loss(loss)
@@ -47,7 +52,7 @@ class QAWeightsUpdater:
         self.step_idx += 1
         return loss.item()
 
-    def _calc_loss(self, manager, inputs, labels):
+    def _calc_loss(self, manager: ModelManager, inputs, labels) -> torch.Tensor:
         with amp.autocast(enabled=self.use_amp):
             try:
                 preds, labels = manager.preproc_forward(inputs, labels)
@@ -61,7 +66,7 @@ class QAWeightsUpdater:
         loss = loss / self.accum_iters
         return loss
 
-    def _backward_loss(self, loss):
+    def _backward_loss(self, loss: torch.Tensor):
         if self.use_amp:
             self.scaler.scale(loss).backward()
         else:
