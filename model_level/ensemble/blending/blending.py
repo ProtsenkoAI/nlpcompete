@@ -1,29 +1,31 @@
-from typing import List, Union, Tuple, Iterable
-from pprint import pprint
+from typing import List, Union, Tuple
 
 import torch
-
-from ..unbatching_processor import UnbatchingProcessor
+import numpy as np
 
 
 # TODO: import from types when these moved from model_level/managing_model.py to types
-UnprocLabels = Union[None, Tuple[List[int], List[int]]]
-UnprocFeatures = Tuple[List[str], List[str]]
 ModelPreds = Tuple[torch.Tensor, torch.Tensor]
-ProcLabelsTokenIdxs = Tuple[torch.Tensor, torch.Tensor]
 
 class BlendingModelManager:
-    def __init__(self, weights: List[float], processor: UnbatchingProcessor):
+    def __init__(self, weights: List[float]):
         # TODO: sum of floats can be not accurate
         if sum(weights) != 1:
             raise ValueError('weights sum doesn\'t equal 1')
-        self._weights = weights
-        self._processor = processor
+        self._weights = np.array(weights)
 
-    def preproc_forward(self, models_preds: List[ModelPreds]) -> Iterable[ModelPreds]:
+    def preproc_forward(self, models_preds: List[ModelPreds]) -> ModelPreds:
         if len(models_preds) != len(self._weights):
             raise ValueError('model_preds and self.weights mismatch')
-        splitted_preds: Iterable[Iterable[Tuple[torch.Tensor, torch.Tensor]]] = map(lambda pred: self._processor.preprocess(pred), models_preds)
-        for i, samples_preds in enumerate(zip(self._weights, splitted_preds)): # type: Tuple[Tuple[torch.Tensor, torch.Tensor], ...]
-            print(f'bruh {i}')
-            pprint(samples_preds)
+        models_preds_squeezed = []
+        for model_preds in models_preds:
+            models_preds_squeezed.extend(model_preds)
+        tmp = torch.stack(models_preds_squeezed).reshape(
+            len(models_preds),
+            -1,
+            models_preds[0][0].shape[0],
+            models_preds[0][0].shape[1]
+        )
+        blended_probs = (tmp * self._weights[:, None, None, None]).sum(axis=0)
+        start_preds, end_preds = blended_probs.split(1, dim=0)
+        return torch.squeeze(start_preds), torch.squeeze(end_preds)
