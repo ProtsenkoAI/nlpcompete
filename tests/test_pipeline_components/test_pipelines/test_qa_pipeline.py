@@ -2,6 +2,8 @@ import unittest
 from collections import Collection
 from pipeline_components.pipelines.qa_pipeline import QAPipeline
 
+from model_level.managing_model import ModelManager
+
 from tests.helpers import config
 config = config.TestsConfig()
 
@@ -32,12 +34,18 @@ class TestHyperOpter(unittest.TestCase):
                                                              train_test_split_kwargs={"test_size": 0.5})
         self.assertEqual(len(eval_vals), 2)
 
+    def test_return_manager(self):
+        print("test_return_manager")
+        manager = shared_objs.pipeline.train_return_manager(**shared_objs.basic_run_kwargs,
+                                                             train_test_split_kwargs={"test_size": 0.5})
+        self.assertIsInstance(manager, ModelManager)
+
     def test_cross_val(self):
         print("test_cross_val")
         cross_val_value = shared_objs.pipeline.cross_val(**shared_objs.basic_run_kwargs,
-                                                         cross_val_kwargs={"nfolds": 8, "max_fold": 3})
+                                                         cross_val_kwargs={"nfolds": 8, "max_fold": 1})
         self.assertIsInstance(cross_val_value, Collection)
 
     def test_submit(self):
         shared_objs.pipeline.fit_submit(**shared_objs.basic_run_kwargs,
-                                       submitter_create_submission_kwargs={"subm_file_name": "some_subm"}, test_nrows=10)
+                                       submitter_create_submission_kwargs={"subm_file_name": "some_subm"}, test_nrows=2)

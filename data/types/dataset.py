@@ -28,7 +28,12 @@ class SampleFeaturesWithAnswers(NamedTuple):
     answer_start_end: Tuple[int, int]
 
 class SampleFeaturesWithId(NamedTuple):
+    id: str
     text: str
     question: str
-    id: str
+
+class SampleFeaturesWithSampleIdx(NamedTuple):
+    text: str
+    question: str
+    id: int
 

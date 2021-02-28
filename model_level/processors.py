@@ -35,7 +35,6 @@ class QADataProcessor:
         return features_proc
 
     def postprocess(self, preds, src_features, src_labels=None):
-        # TODO: check postprocessing in run_squad.py
         src_texts, src_questions = src_features
         tokenized = self._tokenize(src_texts, src_questions)
         if not src_labels is None:
@@ -61,8 +60,6 @@ class QADataProcessor:
 
     def _filter_samples(self, tokenized, labels, other_arrays=()):
         """
-        :param tokenized:
-        :param labels:
         :param other_arrays: len(other_arrays !elems!) == len(tokenized).
         :return:
         """
@@ -127,7 +124,6 @@ class QADataProcessor:
         return encoded
 
     def _char_idxs_to_token_idxs(self, char_idxs, tokenizer_out):
-        # TODO: take realisation from google repo
         start_chars, end_chars = char_idxs
         tokens_positions = tokenizer_out["offset_mapping"]
         start_tokens, end_tokens = [], []

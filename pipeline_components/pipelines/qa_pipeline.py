@@ -64,6 +64,17 @@ class QAPipeline:
         val_scores = trainer.get_eval_vals()
         return val_scores
 
+    def train_return_manager(self, weights_updater_kwargs=None, model_kwargs=None, processor_kwargs=None,
+                                    train_test_split_kwargs=None) -> ModelManager:
+        weights_updater_kwargs, model_kwargs, processor_kwargs, train_test_split_kwargs = \
+            self._set_to_dict_if_none(weights_updater_kwargs, model_kwargs, processor_kwargs, train_test_split_kwargs)
+
+        trainer = self._create_trainer(weights_updater_kwargs)
+        manager = self._create_manager(model_kwargs, processor_kwargs)
+        self._fit(trainer, manager, train_test_split_kwargs)
+        return manager
+
+
     def fit_submit(self, weights_updater_kwargs=None, model_kwargs=None, processor_kwargs=None,
                    train_test_split_kwargs=None, submitter_create_submission_kwargs=None, test_nrows=None):
         (weights_updater_kwargs, model_kwargs, processor_kwargs, train_test_split_kwargs,
