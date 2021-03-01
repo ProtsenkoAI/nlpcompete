@@ -2,7 +2,7 @@ from collections import Collection
 from typing import Union, Iterable
 
 
-from data.contain import DataContainer
+from data.contain.qa_contain import QADataContainer as DataContainer
 from data.datasets.standard_dataset import StandardDataset
 from data.datasets.subm_dataset import SubmDataset
 from data.loaders_creation import DataLoaderSepPartsBuilder

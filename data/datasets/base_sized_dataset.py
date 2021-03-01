@@ -1,6 +1,6 @@
 from torch.utils import data as torch_data
 
-from ..types.dataset import SampleFeatures
+from data.types.qa.dataset import SampleFeatures
 
 
 class SizedDataset(torch_data.Dataset):
