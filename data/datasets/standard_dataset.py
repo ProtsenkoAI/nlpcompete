@@ -1,14 +1,14 @@
-from typing import List, Union, Dict
+from typing import List
 
 from .base_sized_dataset import SizedDataset
-from ..contain import DataContainer
-from ..types.parsed import ParsedParagraph
-from ..types.dataset import SampleWithAnswers, SampleFeatures, SampleFeaturesWithAnswers
+from ..contain.qa_contain import QADataContainer
+from data.types.qa.parsed import ParsedParagraph
+from data.types.qa.dataset import SampleWithAnswers, SampleFeatures, SampleFeaturesWithAnswers
 
 
 class StandardDataset(SizedDataset):
-    def __init__(self, container: DataContainer):
-        data = container.get_data()
+    def __init__(self, container: QADataContainer):
+        data = container.get_data()     
         self.samples = self._get_samples(data)
 
     def _get_samples(self, data: List[ParsedParagraph]) -> List[SampleWithAnswers]:
@@ -22,12 +22,6 @@ class StandardDataset(SizedDataset):
                     samples.append(sample)
 
         return samples
-
-    def add_samples(self, new_samples: List[Dict[str, Union[str, int]]]):
-        for sample in new_samples:
-            sample = SampleWithAnswers(text=sample["text"], question=sample["question"],
-                                       answer_start=sample["answer_start"], answer_end=sample["answer_end"])
-            self.samples.append(sample)
 
     def __getitem__(self, idx: int) -> SampleFeaturesWithAnswers:
         sample = self.samples[idx]

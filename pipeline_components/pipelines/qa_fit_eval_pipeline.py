@@ -1,7 +1,7 @@
 from collections import Collection
 
 
-from data.contain import DataContainer
+from data.contain.qa_contain import QADataContainer
 from data.datasets.standard_dataset import StandardDataset
 from data.loaders_creation import DataLoaderSepPartsBuilder
 from data.data_assistance import DataAssistant
@@ -16,7 +16,7 @@ from model_level.managing_model import ModelManager
 from pipeline_components.train import Trainer
 
 
-class QAPipeline:
+class QATrainEvalPipeline:
     """Intended to define unchanging task-related pipeline values once and then
     do all operations providing needed parameters (esp. model and training architecture).
     Also supports standard kwargs passed to objects that can be redifined in run().
@@ -28,7 +28,7 @@ class QAPipeline:
                  processor_standard_kwargs={},
                  nrows=None):
         """Creates unchanging objects and saved params"""
-        train_container = DataContainer(path=train_path, nrows=nrows)
+        train_container = QADataContainer(path=train_path, nrows=nrows)
         self.train_dataset = StandardDataset(train_container)
         loader_builder = DataLoaderSepPartsBuilder(batch=batch_size)
         self.data_assistant = DataAssistant(loader_builder)

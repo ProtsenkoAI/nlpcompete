@@ -1,12 +1,12 @@
 from typing import Optional, List
 
-from .types.raw import TrainQuestion, TrainAnswer
-from .types.parsed import ParsedAnswer, ParsedQuestionAnswers, ParsedParagraph
+from data.types.qa.raw import TrainQuestion, TrainAnswer
+from data.types.qa.parsed import ParsedAnswer, ParsedQuestionAnswers, ParsedParagraph
 
 import json
 
 
-class DataContainer:
+class QADataContainer:
     def __init__(self, path: str, nrows: Optional[int] = None):
         self.path = path
         self.nrows = nrows
