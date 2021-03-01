@@ -2,7 +2,7 @@ from typing import List, Union
 
 from ..contain.rucos_contain import RucosDataContainer
 from ..types.rucos.parsed import RucosParsedParagraph
-from ..types.rucos.dataset import RucosSample
+from ..types.rucos.dataset import RucosSample, RucosSampleFeatures
 from .base_sized_dataset import SizedDataset
 
 
@@ -16,8 +16,7 @@ class RucosStandardDataset(SizedDataset):
         for paragraph in data:
             for candidate in paragraph.candidates:
                 result.append(RucosSample(
-                    text1=paragraph.text1,
-                    text2=candidate.text2,
+                    features=RucosSampleFeatures(text1=paragraph.text1, text2=candidate.text2),
                     label=candidate.label
                 ))
         return result

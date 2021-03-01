@@ -23,9 +23,10 @@ class Validator:
         all_preds = []
         all_labels = []
         for batch in tqdm(test, desc="eval"):
-            preds, labels_proc = manager.predict_postproc(*batch)
-            all_preds += list(preds)
-            all_labels += list(labels_proc)
+            preds, labels_proc = manager.preproc_forward(*batch)
+            # print(preds, batch)
+            all_preds += list(preds.cpu().detach().numpy() > 0.5)
+            all_labels += list(batch[1])
         print("some labels", all_labels[:20])
         print("some preds", all_preds[:20])
         return all_preds, all_labels

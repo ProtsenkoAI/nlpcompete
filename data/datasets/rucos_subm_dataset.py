@@ -15,6 +15,7 @@ class RucosSubmDataset(SizedDataset):
         result: List[RucosSubmissionSample] = []
         for paragraph in data:
             for candidate in paragraph.candidates:
+                # TODO: change SubmissionSample structure
                 result.append(RucosSubmissionSample(
                     text1=paragraph.text1,
                     text2=candidate.text2,
