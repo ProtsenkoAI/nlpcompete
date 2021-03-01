@@ -9,15 +9,11 @@ from typing import List
 class RucosRawEntity(TypedDict):
     start: int
     end: int
-
-
-class RucosRawAnswerEntity(RucosRawEntity):
     text: str
-
 
 class RucosRawQuery(TypedDict):
     query: str
-    answers: List[RucosRawAnswerEntity]
+    answers: List[RucosRawEntity]
 
 
 class RucosRawPassage(TypedDict):
