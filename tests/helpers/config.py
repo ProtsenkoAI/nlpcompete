@@ -12,8 +12,8 @@ class TestsConfig:
         self.save_dir = "./saved_models/"
 
         self.device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
-        self.train_path = str(self.data_dir / "sbersquad_train.json")
-        self.test_path = str(self.data_dir / "sbersquad_test.json")
+        self.train_path = str(self.data_dir / "train.jsonl")
+        self.test_path = str(self.data_dir / "test.jsonl")
 
         self.model_name = "DeepPavlov/rubert-base-cased"
 

@@ -1,7 +1,7 @@
 import transformers
 import numpy as np
 
-from ..types import *
+from ..qa_types import *
 
 
 class QAProcAssistant:

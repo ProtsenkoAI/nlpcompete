@@ -19,7 +19,7 @@ class QAWeightsUpdater:
         self.lr_end = lr_end
         self.use_amp = use_amp
 
-        self.criterion = nn.CrossEntropyLoss()
+        self.criterion = nn.BCEWithLogitsLoss()
         if self.use_amp:
             self.scaler = amp.GradScaler()
 
@@ -54,15 +54,8 @@ class QAWeightsUpdater:
 
     def _calc_loss(self, manager: ModelManager, inputs, labels) -> torch.Tensor:
         with amp.autocast(enabled=self.use_amp):
-            try:
-                preds, labels = manager.preproc_forward(inputs, labels)
-            except Exception as e:
-                raise e
-            start_labels, end_labels = labels
-            start_probs, end_probs = preds
-            loss_start = self.criterion(start_probs, start_labels)
-            loss_end = self.criterion(end_probs, end_labels)
-            loss = (loss_start + loss_end) / 2
+            preds, labels = manager.preproc_forward(inputs, labels)
+            loss = self.criterion(preds, labels)
         loss = loss / self.accum_iters
         return loss
 

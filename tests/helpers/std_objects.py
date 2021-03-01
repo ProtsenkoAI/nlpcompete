@@ -1,7 +1,8 @@
 from pipeline_components.train import Trainer
 from pipeline_components.pipelines.qa_pipeline import QAPipeline
 from pipeline_components.cross_val import CrossValidator
-from model_level.models.transformer_qanda import TransformerQA
+# from model_level.models.transformer_qanda import TransformerQA
+from model_level.models.sent_pair_binary_classifier import SentPairBinaryClassifier
 from model_level.evaluating import Validator
 from model_level.managing_model import ModelManager
 from model_level.ensemble.blending import BlendingModelManager
@@ -11,7 +12,7 @@ from data.contain import DataContainer
 from data.loaders_creation import DataLoaderSepPartsBuilder
 from data.datasets import StandardDataset, SubmDataset
 from data.data_assistance import DataAssistant
-from model_level.processors import QADataProcessor, QAPseudoLabelProcessor
+from model_level.processors import QADataProcessor, RucosProcessor
 from model_level.saving.local_saver import LocalSaver
 from .config import TestsConfig
 
@@ -36,8 +37,8 @@ def get_weights_updater(**kwargs) -> QAWeightsUpdater:
     return QAWeightsUpdater(**kwargs)
 
 
-def get_model(**model_kwargs) -> TransformerQA:
-    model = TransformerQA(mname=config.model_name, **model_kwargs)
+def get_model(**model_kwargs) -> SentPairBinaryClassifier:
+    model = SentPairBinaryClassifier(mname=config.model_name, **model_kwargs)
     return model
 
 
@@ -78,8 +79,11 @@ def get_loader(dataset=None, has_answers=True) -> DataLoader:
     return loader
 
 
-def get_qa_processor(mname=config.model_name) -> QADataProcessor:
-    return QADataProcessor(mname)
+# def get_qa_processor(mname=config.model_name) -> QADataProcessor:
+#     return QADataProcessor(mname)
+
+def get_rucos_processor() -> RucosProcessor:
+    return RucosProcessor(mname=config.model_name)
 
 
 def get_model_manager(model=None, device=None) -> ModelManager:
@@ -87,20 +91,20 @@ def get_model_manager(model=None, device=None) -> ModelManager:
         device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     if model is None:
         model = get_model()
-    data_processor = get_qa_processor()
+    data_processor = get_rucos_processor()
     
     return ModelManager(model, data_processor, device=device)
 
-def get_pseudo_label_manager(model=None, device=None) -> ModelManager:
-    if device is None:
-        device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-    if model is None:
-        model = get_model()
-    processor = get_qa_pseudo_label_processor()
-    return ModelManager(model, processor, device=device)
+# def get_pseudo_label_manager(model=None, device=None) -> ModelManager:
+#     if device is None:
+#         device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+#     if model is None:
+#         model = get_model()
+#     processor = get_qa_pseudo_label_processor()
+#     return ModelManager(model, processor, device=device)
 
-def get_qa_pseudo_label_processor() -> QAPseudoLabelProcessor:
-    return QAPseudoLabelProcessor(mname=config.model_name)
+# def get_qa_pseudo_label_processor() -> QAPseudoLabelProcessor:
+#     return QAPseudoLabelProcessor(mname=config.model_name)
 
 
 def get_local_saver(**kwargs) -> LocalSaver:

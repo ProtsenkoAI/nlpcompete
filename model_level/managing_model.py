@@ -2,13 +2,13 @@ import torch
 from torch import nn
 from typing import Tuple, List, Union
 
-from model_level.processors import QADataProcessor
+from model_level.processors import RucosProcessor
 from model_level.saving.local_saver import LocalSaver
 
-from .types import *
+from .rucos_types import *
 
 class ModelManager:
-    def __init__(self, model: nn.Module, processor: QADataProcessor, device: torch.device):
+    def __init__(self, model: nn.Module, processor: RucosProcessor, device: torch.device):
         self.model = model
         self.processor = processor
         if device is None:
@@ -26,26 +26,31 @@ class ModelManager:
         self.model.reset_weights()
         self.model.to(self.device)
 
-    def preproc_forward(self, features: UnprocFeatures, labels: UnprocLabels=None) -> Union[ModelPreds,
-                                                                                            Tuple[ModelPreds, ProcLabelsTokenIdxs]]:
+    def preproc_forward(self, features: Union[UnprocFeatures, UnprocSubmFeatures],
+                        labels: UnprocLabels=None, mode="train") -> Union[ModelPreds,
+                                                                                   Tuple[ModelPreds, ProcLabels]]:
+        if mode == "subm":
+            features = features[:2] # text and text2
+        elif mode == "train":
+            pass
+        else:
+            raise ValueError
         out = self.processor.preprocess(features, labels=labels, device=self.device)
         if labels is None:
-            preds = self.model(out)
+            preds = self.model(out).squeeze()
             return preds
         else:
             proc_feats, labels_proc = out
-            preds = self.model(proc_feats)
+            preds = self.model(proc_feats).squeeze()
             return preds, labels_proc
 
-    def predict_postproc(self, features: UnprocFeatures, labels: UnprocLabels=None) -> Union[Tuple[str],                                                                                     Tuple[Tuple[str], Tuple[str]]]:
-        out = self.preproc_forward(features, labels)
-        if labels is None:
-            preds = out
-            postproc_preds = self.processor.postprocess(preds, features)
-        else:
-            preds, _ = out
-            postproc_preds, postproc_labels = self.processor.postprocess(preds, features, labels)
-            return postproc_preds, postproc_labels
+    def predict_postproc(self, features: UnprocSubmFeatures, src_labels: UnprocLabels=None) -> Union[Tuple[str],
+                                                                                                 Tuple[Tuple[str], Tuple[str]]]:
+        if not src_labels is None:
+            raise ValueError("can't pass labels in predict_postproc: we use it only in submission")
+        out = self.preproc_forward(features, mode="subm")
+        preds = out
+        postproc_preds = self.processor.postprocess(preds, features)
         return postproc_preds
 
     def save_model(self, saver: LocalSaver) -> str:

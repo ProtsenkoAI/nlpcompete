@@ -3,6 +3,7 @@ import numpy as np
 import collections
 from torch.utils.data import DataLoader
 from typing import List
+from sklearn.metrics import f1_score
 
 from model_level.managing_model import ModelManager
 
@@ -32,29 +33,30 @@ class Validator:
     def _em_score(self, preds, correct_answers):
         raise NotImplementedError
 
-    def _f1_qa_score(self, preds: List[str], true_texts: List[str]) -> float:
+    def _f1_qa_score(self, preds: List[int], true_labels: List[int]) -> float:
         """F1 metric for QA task. The original SQUAD implementation is being used, but here we work with indexes, 
         not tokens. 
         Source code: https://github.com/nlpyang/pytorch-transformers/blob/master/examples/utils_squad_evaluate.py
         """
-        samples_f1 = []
-        assert(len(true_texts) == len(preds))
-        for sample_labels, sample_preds in zip(true_texts, preds):
-            f1_of_sample = self._sample_f1(sample_labels, sample_preds)
-            samples_f1.append(f1_of_sample)
-        return float(np.mean(samples_f1))
+        # samples_f1 = []
+        # assert(len(true_texts) == len(preds))
+        # for sample_labels, sample_preds in zip(true_texts, preds):
+        #     f1_of_sample = self._sample_f1(sample_labels, sample_preds)
+        #     samples_f1.append(f1_of_sample)
+        # return float(np.mean(samples_f1))
+        return f1_score(true_labels, preds)
 
-    def _sample_f1(self, true_answer: str, predicted: str) -> float:
-        pred_toks = predicted.split()
-        gold_toks = true_answer.split()
-        common = collections.Counter(gold_toks) & collections.Counter(pred_toks)
-        num_same = sum(common.values())
-        if len(gold_toks) == 0 or len(pred_toks) == 0:
-            # If either is no-answer, then F1 is 1 if they agree, 0 otherwise
-            return int(gold_toks == pred_toks)
-        if num_same == 0:
-            return 0
-        precision = 1.0 * num_same / len(pred_toks)
-        recall = 1.0 * num_same / len(gold_toks)
-        f1 = (2 * precision * recall) / (precision + recall)
-        return f1
+    # def _sample_f1(self, true_answer: int, predicted: float) -> float:\
+        # pred_toks = predicted.split()
+        # gold_toks = true_answer.split()
+        # common = collections.Counter(gold_toks) & collections.Counter(pred_toks)
+        # num_same = sum(common.values())
+        # if len(gold_toks) == 0 or len(pred_toks) == 0:
+        #     # If either is no-answer, then F1 is 1 if they agree, 0 otherwise
+        #     return int(gold_toks == pred_toks)
+        # if num_same == 0:
+        #     return 0
+        # precision = 1.0 * num_same / len(pred_toks)
+        # recall = 1.0 * num_same / len(gold_toks)
+        # f1 = (2 * precision * recall) / (precision + recall)
+        # return f1

@@ -7,7 +7,7 @@ config = config.TestsConfig()
 
 class SharedObjects:
     def __init__(self):
-        self.processor = std_objects.get_qa_processor()
+        self.processor = std_objects.get_rucos_processor()
         self.saver = std_objects.get_local_saver()
 
 

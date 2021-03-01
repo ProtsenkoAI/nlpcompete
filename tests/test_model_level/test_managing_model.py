@@ -13,12 +13,18 @@ class SharedObjects:
         self.mod_manager = std_objects.get_model_manager(self.model)
 
         self.batch_size = 4
-        self.features = (["lul it's context"] * self.batch_size,
-                         ["some question?"] * self.batch_size
-                         )
-        self.labels = ([2] * self.batch_size,
-                       [6] * self.batch_size
-                       )
+        self.train_features = (["Тасс бла бла бла какая-то новость."] * self.batch_size,
+                               ["бла бла бла @placeholder"] * self.batch_size
+                              )
+        self.labels = [0, 0, 0, 0, 1, 1, 1, 1]
+
+        self.subm_featues = (["Тасс бла бла бла какая-то новость."] * self.batch_size,
+                             ["бла бла бла @placeholder"] * self.batch_size,
+                             list(range(5000, 5000 + self.batch_size)),
+                             [202] * self.batch_size,
+                             [210] * self.batch_size,
+                             ["Исламское государство"] * self.batch_size
+                              )
 
 
 shared_objs = SharedObjects()
@@ -26,18 +32,17 @@ shared_objs = SharedObjects()
 
 class TestModelManager(unittest.TestCase):
     def test_preproc_forward(self):
-        start_preds, end_preds = shared_objs.mod_manager.preproc_forward(shared_objs.features)
+        proc_preds = shared_objs.mod_manager.preproc_forward(shared_objs.train_features)
 
-        self.assertIsInstance(start_preds, torch.Tensor)
-        self.assertIsInstance(end_preds, torch.Tensor)
-        self.assertEqual(len(shared_objs.features[0]), len(start_preds))
+        self.assertIsInstance(proc_preds, torch.Tensor)
+        self.assertEqual(len(shared_objs.train_features[0]), len(proc_preds))
 
     def test_preproc_forward_labeled(self):
-        batch = (shared_objs.features, shared_objs.labels)
-        _, (proc_start_idxs, proc_end_idxs) = shared_objs.mod_manager.preproc_forward(*batch)
-
-        self.assertIsInstance(proc_start_idxs, torch.Tensor)
-        self.assertIsInstance(proc_end_idxs, torch.Tensor)
+        batch = (shared_objs.train_features, shared_objs.labels)
+        proc_preds, proc_labels = shared_objs.mod_manager.preproc_forward(*batch)
+        print("proc_preds:", proc_preds)
+        self.assertIsInstance(proc_preds, torch.Tensor)
+        self.assertIsInstance(proc_labels, torch.Tensor)
 
     def test_reset_weights(self):
         old_weights = weights_helpers.get_weights(shared_objs.mod_manager.get_model())
@@ -46,19 +51,12 @@ class TestModelManager(unittest.TestCase):
         self.assertFalse(weights_helpers.check_weights_equal(old_weights, new_weights))
 
     def test_predict_postproc(self):
-        answer_start_end_idxs = shared_objs.mod_manager.predict_postproc(
-            shared_objs.features
+        postproced = shared_objs.mod_manager.predict_postproc(
+            shared_objs.subm_featues
         )
-        self.assertEqual(len(answer_start_end_idxs), shared_objs.batch_size)
+        self.assertEqual(len(postproced[0]), shared_objs.batch_size)
+        self.assertEqual(len(postproced), 5) #check rucos_types for description
 
-    def test_predict_get_text_labeled(self):
-        batch = (shared_objs.features, shared_objs.labels)
-        pred_texts, true_texts = shared_objs.mod_manager.predict_postproc(*batch)
-        self.assertEqual(len(pred_texts), shared_objs.batch_size)
-        self.assertEqual(len(true_texts), shared_objs.batch_size)
-
-        self.assertIsInstance(pred_texts[0], str)
-        self.assertIsInstance(true_texts[0], str)
 
     def test_save_then_load(self):
         saver = std_objects.get_local_saver()
@@ -79,6 +77,6 @@ class TestModelManager(unittest.TestCase):
         manager = std_objects.get_model_manager(device=cuda_device)
         shared_objs.mod_manager = manager
 
-        cuda_pred = manager.preproc_forward(shared_objs.features)
+        cuda_pred = manager.preproc_forward(shared_objs.train_features)
 
         self.assertTrue(cuda_pred[0].is_cuda)

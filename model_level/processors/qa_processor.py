@@ -3,7 +3,7 @@ from typing import Tuple, List, Union
 
 from .qa_proc_assistant import QAProcAssistant
 
-from ..types import *
+from ..qa_types import *
 
 class QADataProcessor:
     # TODO: the class is too large, maybe add assistant components

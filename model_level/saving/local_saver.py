@@ -3,10 +3,11 @@ from torch import nn
 import json
 import os
 import uuid
-from typing import Tuple
+from typing import Tuple, Union
 
-from ..models.transformer_qanda import TransformerQA
-from ..processors import QADataProcessor
+# from ..models.transformer_qanda import TransformerQA
+from ..models.sent_pair_binary_classifier import SentPairBinaryClassifier
+from ..processors import RucosProcessor
 
 
 class LocalSaver:
@@ -14,7 +15,7 @@ class LocalSaver:
         self.save_dir = save_dir
         os.makedirs(save_dir, exist_ok=True)
 
-    def save(self, model: nn.Module, processor: QADataProcessor) -> str:
+    def save(self, model: nn.Module, processor: Union[RucosProcessor]) -> str:
         model_init_kwargs = model.get_init_kwargs()
         processor_init_kwargs = processor.get_init_kwargs()
         state_dict = model.state_dict()
@@ -32,11 +33,11 @@ class LocalSaver:
         torch.save(state, weights_path)
         return name
 
-    def load(self, name: str) -> Tuple[TransformerQA, QADataProcessor]:
+    def load(self, name: str) -> Tuple[SentPairBinaryClassifier, RucosProcessor]:
         meta, state_dict = self._load_meta_and_state(name)
-        model = TransformerQA(**meta["model_meta"])
+        model = SentPairBinaryClassifier(**meta["model_meta"])
         model.load_state_dict(state_dict)
-        processor = QADataProcessor(**meta["processor_meta"])
+        processor = RucosProcessor(**meta["processor_meta"])
         return model, processor
 
     def _load_meta_and_state(self, name):

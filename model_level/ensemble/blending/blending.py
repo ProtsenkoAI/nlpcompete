@@ -4,7 +4,7 @@ import torch
 import numpy as np
 
 
-# TODO: import from types when these moved from model_level/managing_model.py to types
+# TODO: import from qa_types when these moved from model_level/managing_model.py to qa_types
 ModelPreds = Tuple[torch.Tensor, torch.Tensor]
 
 class BlendingModelManager:
