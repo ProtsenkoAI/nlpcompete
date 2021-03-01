@@ -19,7 +19,7 @@ class QAWeightsUpdater:
         self.lr_end = lr_end
         self.use_amp = use_amp
 
-        self.criterion = nn.BCEWithLogitsLoss()
+        self.criterion = nn.BCELoss()
         if self.use_amp:
             self.scaler = amp.GradScaler()
 

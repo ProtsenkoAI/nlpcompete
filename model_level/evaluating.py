@@ -22,9 +22,12 @@ class Validator:
     def _pred_all_batches(self, manager, test: DataLoader):
         all_preds = []
         all_labels = []
-        for batch in tqdm(test, desc="eval"):
+        for i, batch in enumerate(tqdm(test, desc="eval")):
             preds, labels_proc = manager.preproc_forward(*batch)
-            # print(preds, batch)
+            if i < 10:
+                if i == 0:
+                    print('preds in eval')
+                print(preds)
             all_preds += list(preds.cpu().detach().numpy() > 0.5)
             all_labels += list(batch[1])
         print("some labels", all_labels[:20])

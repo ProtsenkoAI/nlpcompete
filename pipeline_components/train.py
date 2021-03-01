@@ -41,7 +41,9 @@ class Trainer:
                     self._eval_save_if_need(model_manager, val_loader)
                     print("Mean losses:", np.mean(losses))
                     losses = []
-                
+                if (self.step_nb + 1) % 200 == 0:
+                    print('Mean losses:', np.mean(losses))
+                    losses = []
                 self.step_nb += 1
             self.epoch_nb += 1
 
