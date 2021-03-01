@@ -95,7 +95,7 @@ class QAPipeline:
         return loader, submitter
 
     def cross_val(self, weights_updater_kwargs=None, model_kwargs=None, processor_kwargs=None,
-                  cross_val_kwargs=None) -> float:
+                  cross_val_kwargs=None) -> list:
         weights_updater_kwargs, model_kwargs, processor_kwargs, cross_val_kwargs = \
             self._set_to_dict_if_none(weights_updater_kwargs, model_kwargs, processor_kwargs, cross_val_kwargs)
         trainer = self._create_trainer(weights_updater_kwargs)

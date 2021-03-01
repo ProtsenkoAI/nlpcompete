@@ -9,7 +9,7 @@ from data.contain import DataContainer
 from data.loaders_creation import DataLoaderSepPartsBuilder
 from data.datasets import StandardDataset, SubmDataset
 from data.data_assistance import DataAssistant
-from model_level.processors import QADataProcessor
+from model_level.processors import QADataProcessor, QAPseudoLabelProcessor
 from model_level.saving.local_saver import LocalSaver
 from .config import TestsConfig
 
@@ -76,7 +76,7 @@ def get_loader(dataset=None, has_answers=True) -> DataLoader:
     return loader
 
 
-def get_qa_processor(mname="DeepPavlov/rubert-base-cased") -> QADataProcessor:
+def get_qa_processor(mname=config.model_name) -> QADataProcessor:
     return QADataProcessor(mname)
 
 
@@ -88,6 +88,17 @@ def get_model_manager(model=None, device=None) -> ModelManager:
     data_processor = get_qa_processor()
     
     return ModelManager(model, data_processor, device=device)
+
+def get_pseudo_label_manager(model=None, device=None) -> ModelManager:
+    if device is None:
+        device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+    if model is None:
+        model = get_model()
+    processor = get_qa_pseudo_label_processor()
+    return ModelManager(model, processor, device=device)
+
+def get_qa_pseudo_label_processor() -> QAPseudoLabelProcessor:
+    return QAPseudoLabelProcessor(mname=config.model_name)
 
 
 def get_local_saver(**kwargs) -> LocalSaver:

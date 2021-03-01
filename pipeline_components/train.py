@@ -62,6 +62,9 @@ class Trainer:
             raise ValueError("Model was not saved")
         return ModelManager.load(self.saver, self.best_model_name)
 
+    def get_best_model_name(self):
+        return self.best_model_name
+
     def _early_stopping(self, max_epoch: int, max_step: int, stop_patience: int) -> bool:
         if not max_step is None:
             if self.step_nb >= max_step:

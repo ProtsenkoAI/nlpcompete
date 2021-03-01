@@ -1,4 +1,4 @@
-from typing import List
+from typing import List, Union, Dict
 
 from .base_sized_dataset import SizedDataset
 from ..contain import DataContainer
@@ -22,6 +22,12 @@ class StandardDataset(SizedDataset):
                     samples.append(sample)
 
         return samples
+
+    def add_samples(self, new_samples: List[Dict[str, Union[str, int]]]):
+        for sample in new_samples:
+            sample = SampleWithAnswers(text=sample["text"], question=sample["question"],
+                                       answer_start=sample["answer_start"], answer_end=sample["answer_end"])
+            self.samples.append(sample)
 
     def __getitem__(self, idx: int) -> SampleFeaturesWithAnswers:
         sample = self.samples[idx]

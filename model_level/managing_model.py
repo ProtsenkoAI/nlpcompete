@@ -5,11 +5,7 @@ from typing import Tuple, List, Union
 from model_level.processors import QADataProcessor
 from model_level.saving.local_saver import LocalSaver
 
-# TODO: move to types
-UnprocLabels = Union[None, Tuple[List[int], List[int]]]
-UnprocFeatures = Tuple[List[str], List[str]]
-ModelPreds = Tuple[torch.Tensor, torch.Tensor]
-ProcLabelsTokenIdxs = Tuple[torch.Tensor, torch.Tensor]
+from .types import *
 
 class ModelManager:
     def __init__(self, model: nn.Module, processor: QADataProcessor, device: torch.device):
@@ -22,6 +18,9 @@ class ModelManager:
 
     def get_model(self) -> nn.Module:
         return self.model
+
+    def reset_processor(self, new_processor):
+        self.processor = new_processor
 
     def reset_model_weights(self):
         self.model.reset_weights()
@@ -38,8 +37,7 @@ class ModelManager:
             preds = self.model(proc_feats)
             return preds, labels_proc
 
-    def predict_postproc(self, features: UnprocFeatures, labels: UnprocLabels=None) -> Union[Tuple[str],
-                                                                                             Tuple[Tuple[str], Tuple[str]]]:
+    def predict_postproc(self, features: UnprocFeatures, labels: UnprocLabels=None) -> Union[Tuple[str],                                                                                     Tuple[Tuple[str], Tuple[str]]]:
         out = self.preproc_forward(features, labels)
         if labels is None:
             preds = out
