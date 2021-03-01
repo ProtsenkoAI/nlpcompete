@@ -7,19 +7,19 @@ from ..types.rucos.raw import RucosRawParagraph, RucosRawEntity, RucosRawQuery, 
 
 
 class RucosDataContainer:
-    def __init__(self, path: str, has_labels: bool = True, nrows: Optional[int] = None):
+    def __init__(self, path: str, has_labels: bool = True, nrows: Optional[int] = None, start_row=0):
         self.path = path
         self.nrows = nrows
         self.has_labels = has_labels
+        self.start_row = start_row
 
     def get_data(self) -> List[RucosParsedParagraph]:
         result: List[RucosParsedParagraph] = []
         with open(self.path) as f:
-            if self.nrows is not None:
-                iterable = islice(f, self.nrows)
-            else:
-                iterable = f
-            for line in iterable:
+            lines = list(f.readlines())
+            if self.nrows is None:
+                self.nrows = len(lines)
+            for line in lines[self.start_row: self.start_row + self.nrows]:
                 p: RucosRawParagraph = json.loads(line)
                 self._fill_missed_data(p)
                 result.append(self._parse_paragraph(p))

@@ -9,6 +9,12 @@ class RucosSample(NamedTuple):
     features: RucosSampleFeatures
     label: int
 
+class RucosEvalSampleFeatures(NamedTuple):
+    question_idx: int
+    text1: str
+    text2: str
+
+
 
 class RucosSubmissionSample(NamedTuple):
     text1: str

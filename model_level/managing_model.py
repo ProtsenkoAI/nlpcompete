@@ -53,7 +53,7 @@ class ModelManager:
         if not src_labels is None:
             preds, proc_labels = out
             postproc_preds = self.processor.postprocess(preds, features)
-            return postprocess_preds, proc_labels
+            return postproc_preds, proc_labels
         preds = out
         postproc_preds = self.processor.postprocess(preds, features)
         return postproc_preds
