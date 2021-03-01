@@ -7,7 +7,7 @@ from ..types.rucos.raw import RucosRawParagraph, RucosRawEntity, RucosRawQuery, 
 
 
 class RucosDataContainer:
-    def __init__(self, path: str, nrows: Optional[int] = None, has_labels: bool = True):
+    def __init__(self, path: str, has_labels: bool = True, nrows: Optional[int] = None):
         self.path = path
         self.nrows = nrows
         self.has_labels = has_labels
@@ -53,8 +53,8 @@ class RucosDataContainer:
             passage: RucosRawPassage
     ) -> RucosParsedCandidate:
         placeholder = passage['text'][entity['start']:entity['end']]
-        filtered_answers = self._filter_duplicate_entities(query['answers'])
         if self.has_labels:
+            filtered_answers = self._filter_duplicate_entities(query['answers'])
             is_answer = any(ans['text'] == entity['text'] for ans in filtered_answers)
             label = 1 if is_answer else 0
         else:

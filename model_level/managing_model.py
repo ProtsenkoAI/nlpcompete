@@ -2,7 +2,7 @@ import torch
 from torch import nn
 from typing import Tuple, List, Union
 
-from model_level.processors import RucosProcessor
+from model_level.processors.rucos_processor import RucosProcessor
 from model_level.saving.local_saver import LocalSaver
 
 from .rucos_types import *

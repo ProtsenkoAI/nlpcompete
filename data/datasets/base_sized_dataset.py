@@ -1,11 +1,9 @@
 from torch.utils import data as torch_data
 
-from data.types.qa.dataset import SampleFeatures
-
 
 class SizedDataset(torch_data.Dataset):
     def __len__(self):
         raise NotImplementedError
 
-    def __getitem__(self, idx) -> SampleFeatures:
+    def __getitem__(self, idx):
         raise NotImplementedError
