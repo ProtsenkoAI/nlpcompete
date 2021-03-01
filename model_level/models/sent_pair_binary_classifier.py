@@ -67,8 +67,9 @@ class SentPairBinaryClassifier(nn.Module):
         linear = nn.Linear(inp_hidden_size, out_hidden_size)
         dropout = nn.Dropout(droprate)
         comps = [dropout, linear]
-
-        if not is_last:
+        if is_last:
+            comps.append(nn.Sigmoid())
+        else:
             activation = nn.ReLU()
             comps.append(activation)
 
