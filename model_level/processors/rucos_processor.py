@@ -17,7 +17,7 @@ class RucosProcessor:
         tokenized = self.tokenize(*features)
         features_proc = self._preproc_tokenized(tokenized, device)
         if not labels is None:
-            labels_proc = self._create_tensors([labels], device)[0]
+            labels_proc = self._create_tensors([labels], device)[0].float()
             return features_proc, labels_proc
         return features_proc
 

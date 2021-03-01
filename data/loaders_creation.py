@@ -12,7 +12,7 @@ class DataLoaderSepPartsBuilder:
             if has_answers:
                 features, labels = zipped_out
                 features = self._sep_parts(features)
-                labels = self._sep_parts(labels)
+                # labels = self._sep_parts(labels)
                 return features, labels
             else:
                 features = zipped_out

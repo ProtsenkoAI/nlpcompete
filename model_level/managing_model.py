@@ -2,7 +2,7 @@ import torch
 from torch import nn
 from typing import Tuple, List, Union
 
-from model_level.processors import RucosProcessor
+from model_level.processors.rucos_processor import RucosProcessor
 from model_level.saving.local_saver import LocalSaver
 
 from .rucos_types import *
@@ -41,14 +41,19 @@ class ModelManager:
             return preds
         else:
             proc_feats, labels_proc = out
-            preds = self.model(proc_feats).squeeze()
+            preds = self.model(proc_feats).squeeze(dim=-1)
             return preds, labels_proc
 
     def predict_postproc(self, features: UnprocSubmFeatures, src_labels: UnprocLabels=None) -> Union[Tuple[str],
                                                                                                  Tuple[Tuple[str], Tuple[str]]]:
+        # TODO: bruh
+        # if not src_labels is None:
+        #     raise ValueError("can't pass labels in predict_postproc: we use it only in submission")
+        out = self.preproc_forward(features, src_labels, mode="subm")
         if not src_labels is None:
-            raise ValueError("can't pass labels in predict_postproc: we use it only in submission")
-        out = self.preproc_forward(features, mode="subm")
+            preds, proc_labels = out
+            postproc_preds = self.processor.postprocess(preds, features)
+            return postprocess_preds, proc_labels
         preds = out
         postproc_preds = self.processor.postprocess(preds, features)
         return postproc_preds
