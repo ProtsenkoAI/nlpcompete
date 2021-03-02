@@ -61,6 +61,7 @@ class Trainer:
             safe_max = max(self.eval_vals)
         if eval_value >= safe_max:
             self.best_model_name = manager.save_model(self.saver)
+            print(f"Saved model. Eval value: {eval_value} Name:", self.best_model_name)
         self.eval_vals.append(eval_value)
         manager.get_model().train()
 
