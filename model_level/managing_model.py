@@ -26,15 +26,8 @@ class ModelManager:
         self.model.reset_weights()
         self.model.to(self.device)
 
-    def preproc_forward(self, features: Union[UnprocFeatures, UnprocSubmFeatures],
-                        labels: UnprocLabels=None, mode="train") -> Union[ModelPreds,
-                                                                                   Tuple[ModelPreds, ProcLabels]]:
-        if mode == "subm":
-            features = features[:2] # text and text2
-        elif mode == "train":
-            pass
-        else:
-            raise ValueError
+    def preproc_forward(self, features: UnprocFeatures,
+                        labels: UnprocLabels=None) -> Union[ModelPreds, Tuple[ModelPreds, ProcLabels]]:
         out = self.processor.preprocess(features, labels=labels, device=self.device)
         if labels is None:
             preds = self.model(out).squeeze()
@@ -49,7 +42,8 @@ class ModelManager:
         # TODO: bruh
         # if not src_labels is None:
         #     raise ValueError("can't pass labels in predict_postproc: we use it only in submission")
-        out = self.preproc_forward(features, src_labels, mode="subm")
+        text1, text2, question_idx, start, end, placeholder = features
+        out = self.preproc_forward((text1, text2, placeholder), src_labels)
         if not src_labels is None:
             preds, proc_labels = out
             postproc_preds = self.processor.postprocess(preds, features)

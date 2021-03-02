@@ -3,6 +3,7 @@ from typing import NamedTuple
 class RucosSampleFeatures(NamedTuple):
     text1: str
     text2: str
+    placeholder: str
 
 
 class RucosSample(NamedTuple):
@@ -13,7 +14,7 @@ class RucosEvalSampleFeatures(NamedTuple):
     question_idx: int
     text1: str
     text2: str
-
+    placeholder: str
 
 
 class RucosSubmissionSample(NamedTuple):
