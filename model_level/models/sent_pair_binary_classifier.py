@@ -26,20 +26,20 @@ class SentPairBinaryClassifier(nn.Module):
         self.droprate = droprate
         self.head_nlayers = head_nlayers
         self.head_nneurons = head_nneurons
+        self.use_hidden_pooling = use_hidden_pooling
 
-        if transformer_weights is None:
+        if transformer_weights_path is None:
             self.transformer = self._load_transformer()
         else:
             bert_state = torch.load(transformer_weights_path)
             bert = transformers.BertForMaskedLM.from_pretrained(mname)
             bert.load_state_dict(bert_state)
-            self.transformer = transformer_weights.bert
+            self.transformer = bert.bert
 
 
         self.transformer_out_size = self._get_transformer_out_size(self.transformer)
 
         self.head = self._create_head(droprate, head_nlayers, head_nneurons)
-        self.use_hidden_pooling = use_hidden_pooling
 
     def get_init_kwargs(self):
         return {"mname": self.mname,
