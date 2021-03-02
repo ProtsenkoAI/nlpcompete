@@ -77,8 +77,19 @@ class RucosProcessor:
             start_of_placeholder = min(token_starts, key=lambda x: abs(x - placeholder_start))
             end_of_placeholder = min(token_ends, key=lambda x: abs(x - placeholder_end))
 
-            start_adjust_text_token = max(start_of_placeholder - tokens_left // 2, 0)
-            end_adjust_text_token = min(end_of_placeholder + tokens_left // 2, self.maxlen - 1)
+            # start_adjust_text_token = max(start_of_placeholder - tokens_left // 2, 0)
+            #     end_adjust_text_token = min(end_of_placeholder + tokens_left // 2, self.maxlen - 1)
+            # if start_of_placeholder - tokens_left // 2 < 0:
+            #     end_adjust_text_token = start_adjust_text_token + tokens_left
+            # else:
+            start_adjust_text_token = start_of_placeholder - tokens_left // 2
+            end_adjust_text_token = end_of_placeholder + tokens_left // 2
+            if end_adjust_text_token >= self.maxlen - 1:
+                start_adjust_text_token -= end_adjust_text_token - self.maxlen - 1
+                end_adjust_text_token = self.maxlen - 1
+            if start_adjust_text_token < 0:
+                end_adjust_text_token -= start_adjust_text_token
+                start_adjust_text_token = 0
 
             char_of_start = mapping[0][start_adjust_text_token][0]
 
