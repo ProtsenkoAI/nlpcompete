@@ -7,18 +7,23 @@ from ..types.rucos.dataset import RucosSubmissionSample
 
 
 class RucosSubmDataset(SizedDataset):
-    def __init__(self, container: RucosDataContainer):
+    def __init__(self, container: RucosDataContainer, switch_texts=False):
         data = container.get_data()
         self._samples = self._get_samples(data)
+        self.switch_texts = switch_texts
 
     def _get_samples(self, data: List[RucosParsedParagraph]) -> List[RucosSubmissionSample]:
         result: List[RucosSubmissionSample] = []
         for paragraph in data:
             for candidate in paragraph.candidates:
-                # TODO: change SubmissionSample structure
+                text1 = paragraph.text1
+                text2 = candidate.text2
+                if self.switch_texts:
+                    text2, text1 = text1, text2
+
                 result.append(RucosSubmissionSample(
-                    text1=paragraph.text1,
-                    text2=candidate.text2,
+                    text1=text1,
+                    text2=text2,
                     question_idx=paragraph.idx,
                     start=candidate.start_char,
                     end=candidate.end_char,

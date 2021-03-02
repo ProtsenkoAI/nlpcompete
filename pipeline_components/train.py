@@ -2,6 +2,7 @@ import numpy as np
 from tqdm.notebook import tqdm
 from torch.utils.data import DataLoader
 from typing import Union
+import gc, torch
 
 from model_level.evaluating import Validator
 from model_level.updating_weights.qa_weights_updater import QAWeightsUpdater
@@ -38,6 +39,7 @@ class Trainer:
                 losses.append(loss_val)
 
                 if (self.step_nb + 1) % steps_betw_evals == 0:
+                    del batch
                     self._eval_save_if_need(model_manager, val_loader)
                     print("Mean losses:", np.mean(losses))
                     losses = []
@@ -49,6 +51,9 @@ class Trainer:
 
     def _eval_save_if_need(self, manager, loader):
         manager.get_model().eval()
+        gc.collect()
+        torch.cuda.empty_cache()
+
         eval_value = self.validator.eval(manager, loader)
         safe_max = 0        
         print("_eval. Eval_value:", eval_value)

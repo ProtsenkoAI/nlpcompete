@@ -22,7 +22,7 @@ class Validator:
             question_idx, text1, text2 = features
             preds, proc_labels = manager.preproc_forward((text1, text2), labels)
             tmp_df = pd.DataFrame({"id": question_idx,
-                                   "prob": preds.cpu().detach().numpy(),
+                                   "prob": preds.cpu().detach().numpy()[:, 1],
                                    "label": proc_labels.cpu().detach().numpy()
                                    })
             val_df = val_df.append(tmp_df, ignore_index=True)

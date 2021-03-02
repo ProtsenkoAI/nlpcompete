@@ -31,8 +31,7 @@ class RucosProcessor:
                                  max_length=self.maxlen,
                                  padding="max_length",
                                  truncation=True,
-                                 return_tensors="np",
-                                 return_offsets_mapping=True)
+                                 return_tensors="np")
         return encoded
 
     def _preproc_tokenized(self, tokenized, device):

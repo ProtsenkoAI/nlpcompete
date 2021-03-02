@@ -7,11 +7,15 @@ from ..types.rucos.raw import RucosRawParagraph, RucosRawEntity, RucosRawQuery, 
 
 
 class RucosDataContainer:
-    def __init__(self, path: str, has_labels: bool = True, nrows: Optional[int] = None, start_row=0):
+    def __init__(self, path: str, has_labels: bool = True, nrows: Optional[int] = None,
+                 start_row=0, query_placeholder_union_mode="replace"):
         self.path = path
         self.nrows = nrows
         self.has_labels = has_labels
         self.start_row = start_row
+        if query_placeholder_union_mode not in ["replace", "concatenate"]:
+            raise ValueError(query_placeholder_union_mode)
+        self.query_placeholder_union_mode = query_placeholder_union_mode
 
     def get_data(self) -> List[RucosParsedParagraph]:
         result: List[RucosParsedParagraph] = []
@@ -59,12 +63,18 @@ class RucosDataContainer:
             label = 1 if is_answer else 0
         else:
             label = None
-        return RucosParsedCandidate(
-            text2=query['query'].replace(
+
+
+        if self.query_placeholder_union_mode == "replace":
+            text2 = query['query'].replace(
                 '@placeholder',
                 placeholder,
-                1
-            ),
+                1)
+        else:
+            text2 = placeholder + " " + query["query"]
+
+        return RucosParsedCandidate(
+            text2=text2,
             label=label,
             start_char=entity['start'],
             end_char=entity['end'],
