@@ -20,10 +20,11 @@ class RucosDataContainer:
     def get_data(self) -> List[RucosParsedParagraph]:
         result: List[RucosParsedParagraph] = []
         with open(self.path) as f:
-            lines = list(f.readlines())
             if self.nrows is None:
-                self.nrows = len(lines)
-            for line in lines[self.start_row: self.start_row + self.nrows]:
+                iterable = islice(f, self.start_row, None)
+            else:
+                iterable = islice(f, self.start_row, self.start_row + self.nrows)
+            for line in iterable:
                 p: RucosRawParagraph = json.loads(line)
                 self._fill_missed_data(p)
                 result.append(self._parse_paragraph(p))
