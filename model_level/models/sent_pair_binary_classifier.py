@@ -32,9 +32,12 @@ class SentPairBinaryClassifier(nn.Module):
             self.transformer = self._load_transformer()
         else:
             bert_state = torch.load(transformer_weights_path)
-            bert = transformers.BertForMaskedLM.from_pretrained(mname)
-            bert.load_state_dict(bert_state)
-            self.transformer = bert.bert
+            bert_lm = transformers.BertForMaskedLM.from_pretrained(mname)
+            bert_lm.load_state_dict(bert_state)
+
+            bert = transformers.AutoModel.from_pretrained(mname)
+            bert.bert = bert_lm.bert
+            self.transformer = bert
 
 
         self.transformer_out_size = self._get_transformer_out_size(self.transformer)
@@ -59,6 +62,7 @@ class SentPairBinaryClassifier(nn.Module):
         """
         """
         x = self.transformer(*transformer_inputs)
+        # print(x)
         if self.use_hidden_pooling:
             x = x['last_hidden_state']
         else:

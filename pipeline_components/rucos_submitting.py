@@ -18,6 +18,7 @@ class RucosSubmitter:
     def create_submission(self, mm: ModelManager, loader: DataLoader, subm_file_name: str = 'submission',
                           probs_file_name=None):
         df = self._get_placeholders_probs_dataframe(mm, loader)
+        print("len of df", len(df))
         if not probs_file_name is None:
             df.to_csv(os.path.join(self.subm_dir, probs_file_name))
         subm = []
@@ -26,8 +27,8 @@ class RucosSubmitter:
             try:
                 sorted = sub_df.sort_values(by='probs', ascending=False)
             except ValueError as e:
-                print("VALUE ERROR in sorting", e)
-                print("sorted", sub_df)
+                # print("VALUE ERROR in sorting", e)
+                # print("sorted", sub_df)
                 sorted = sub_df
 
             answer = sorted.iloc[0]
