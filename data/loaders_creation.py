@@ -6,7 +6,7 @@ class DataLoaderSepPartsBuilder:
     def __init__(self, batch):
         self.batch = batch
 
-    def build(self, dataset, has_answers=True):
+    def build(self, dataset, has_answers=True, shuffle: bool = False):
         def sep_xy(objects_list):
             zipped_out = self._sep_parts(objects_list)
             if has_answers:
@@ -18,9 +18,12 @@ class DataLoaderSepPartsBuilder:
                 features = zipped_out
                 return features
 
-        return torch_data.DataLoader(dataset=dataset,
-                                     collate_fn=sep_xy,
-                                     batch_size=self.batch)
+        return torch_data.DataLoader(
+            dataset=dataset,
+            collate_fn=sep_xy,
+            batch_size=self.batch,
+            shuffle=shuffle
+        )
 
     def _sep_parts(self, samples_list):
         categories = list(zip(*samples_list))

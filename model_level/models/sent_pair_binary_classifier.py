@@ -7,8 +7,16 @@ from typing import Tuple, List, Union
 
 class SentPairBinaryClassifier(nn.Module):
     # TODO: (architecture) make transformer model to be a composition of transformer and head
-    def __init__(self, mname: str, cache_dir="./cache_models/",
-                 droprate=0.3, head_nlayers=1, head_nneurons=768, transformer_weights=None):
+    def __init__(
+            self,
+            mname: str,
+            cache_dir: str = "./cache_models/",
+            droprate: int = 0.3,
+            head_nlayers: int = 1,
+            head_nneurons: int = 768,
+            use_hidden_pooling: bool = False,
+            transformer_weights_path=None
+    ):
         """
         :param mname: a Model name listed in https://huggingface.co/models
         """
@@ -22,10 +30,16 @@ class SentPairBinaryClassifier(nn.Module):
         if transformer_weights is None:
             self.transformer = self._load_transformer()
         else:
-            self.transformer = transformer_weights
+            bert_state = torch.load(transformer_weights_path)
+            bert = transformers.BertForMaskedLM.from_pretrained(mname)
+            bert.load_state_dict(bert_state)
+            self.transformer = transformer_weights.bert
+
+
         self.transformer_out_size = self._get_transformer_out_size(self.transformer)
 
         self.head = self._create_head(droprate, head_nlayers, head_nneurons)
+        self.use_hidden_pooling = use_hidden_pooling
 
     def get_init_kwargs(self):
         return {"mname": self.mname,
@@ -44,18 +58,22 @@ class SentPairBinaryClassifier(nn.Module):
         """
         """
         x = self.transformer(*transformer_inputs)
-        x = x["pooler_output"]  # be attentive: last_hidden_state isn't used for classification
+        if self.use_hidden_pooling:
+            x = x['last_hidden_state']
+        else:
+            x = x["pooler_output"]  # be attentive: last_hidden_state isn't used for classification
         x = self.head(x)
         return x
 
     def _create_head(self, droprate: float, n_layers: int, head_nneurons: int) -> nn.Module:
         if n_layers > 1:
             raise ValueError(n_layers)
-        head = nn.Sequential(
-            nn.Dropout(p=droprate),
-            nn.Linear(self.transformer_out_size, 2)
-        )
-        return head
+        layers = []
+        if self.use_hidden_pooling:
+            layers.append(nn.AdaptiveAvgPool2d(output_size=(1, self.transformer_out_size)))
+        layers.append(nn.Dropout(p=droprate))
+        layers.append(nn.Linear(self.transformer_out_size, 2))
+        return nn.Sequential(*layers)
 
     def reset_weights(self, device: Union[None, torch.device] = None) -> None:
         self.transformer = self._load_transformer()

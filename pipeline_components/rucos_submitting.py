@@ -15,16 +15,21 @@ class RucosSubmitter:
             subm_dir = '.'
         self.subm_dir =subm_dir
 
-    def create_submission(self, mm: ModelManager, loader: DataLoader, subm_file_name: str = 'submission'):
+    def create_submission(self, mm: ModelManager, loader: DataLoader, subm_file_name: str = 'submission',
+                          probs_file_name=None):
         df = self._get_placeholders_probs_dataframe(mm, loader)
+        if not probs_file_name is None:
+            df.to_csv(os.path.join(self.subm_dir, probs_file_name))
         subm = []
         for idx, sub_df in df.groupby('idx'):
+
             try:
                 sorted = sub_df.sort_values(by='probs', ascending=False)
             except ValueError as e:
                 print("VALUE ERROR in sorting", e)
                 print("sorted", sub_df)
                 sorted = sub_df
+
             answer = sorted.iloc[0]
             subm.append({
                 'idx': int(answer['idx']),
@@ -32,8 +37,9 @@ class RucosSubmitter:
                 'start': int(answer['start']),
                 'text': answer['placeholder'],
             })
-        with open(os.path.join(self.subm_dir, subm_file_name), 'w') as f:
-            f.writelines(json.dumps(bruh, ensure_ascii=False) + '\n' for bruh in subm)
+        if not subm_file_name is None:
+            with open(os.path.join(self.subm_dir, subm_file_name), 'w') as f:
+                f.writelines(json.dumps(bruh, ensure_ascii=False) + '\n' for bruh in subm)
 
     def _get_placeholders_probs_dataframe(self, manager: ModelManager, loader: DataLoader) -> pd.DataFrame:
         res = {
