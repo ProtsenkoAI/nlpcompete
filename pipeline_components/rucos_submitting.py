@@ -19,12 +19,17 @@ class RucosSubmitter:
         df = self._get_placeholders_probs_dataframe(mm, loader)
         subm = []
         for idx, sub_df in df.groupby('idx'):
-            sorted = sub_df.sort_values(by='probs', ascending=False)
+            try:
+                sorted = sub_df.sort_values(by='probs', ascending=False)
+            except ValueError as e:
+                print("VALUE ERROR in sorting", e)
+                print("sorted", sub_df)
+                sorted = sub_df
             answer = sorted.iloc[0]
             subm.append({
-                'idx': answer['idx'],
-                'end': answer['end'],
-                'start': answer['start'],
+                'idx': int(answer['idx']),
+                'end': int(answer['end']),
+                'start': int(answer['start']),
                 'text': answer['placeholder'],
             })
         with open(os.path.join(self.subm_dir, subm_file_name), 'w') as f:
@@ -41,7 +46,7 @@ class RucosSubmitter:
         for text1, text2, idx, start, end, placeholder in tqdm(loader):
             idx, probs, start, end, placeholder = manager.predict_postproc((text1, text2, idx, start, end, placeholder))
             res['idx'].extend(idx)
-            res['probs'].extend(probs)
+            res['probs'].extend(probs[:, 1].tolist())
             res['start'].extend(start)
             res['end'].extend(end)
             res['placeholder'].extend(placeholder)

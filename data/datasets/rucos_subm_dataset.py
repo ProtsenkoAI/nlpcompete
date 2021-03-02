@@ -9,8 +9,8 @@ from ..types.rucos.dataset import RucosSubmissionSample
 class RucosSubmDataset(SizedDataset):
     def __init__(self, container: RucosDataContainer, switch_texts=False):
         data = container.get_data()
-        self._samples = self._get_samples(data)
         self.switch_texts = switch_texts
+        self._samples = self._get_samples(data)
 
     def _get_samples(self, data: List[RucosParsedParagraph]) -> List[RucosSubmissionSample]:
         result: List[RucosSubmissionSample] = []

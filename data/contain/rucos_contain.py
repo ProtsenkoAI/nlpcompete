@@ -8,11 +8,13 @@ from ..types.rucos.raw import RucosRawParagraph, RucosRawEntity, RucosRawQuery, 
 
 class RucosDataContainer:
     def __init__(self, path: str, has_labels: bool = True, nrows: Optional[int] = None,
-                 start_row=0, query_placeholder_union_mode="replace"):
+                 start_row=0, text_idxs:List[int]=None, query_placeholder_union_mode="replace"):
         self.path = path
         self.nrows = nrows
         self.has_labels = has_labels
         self.start_row = start_row
+        self.text_idxs = text_idxs
+
         if query_placeholder_union_mode not in ["replace", "concatenate"]:
             raise ValueError(query_placeholder_union_mode)
         self.query_placeholder_union_mode = query_placeholder_union_mode
@@ -20,14 +22,23 @@ class RucosDataContainer:
     def get_data(self) -> List[RucosParsedParagraph]:
         result: List[RucosParsedParagraph] = []
         with open(self.path) as f:
-            if self.nrows is None:
-                iterable = islice(f, self.start_row, None)
+            if self.text_idxs is None:
+                if self.nrows is None:
+                    iterable = islice(f, self.start_row, None)
+                else:
+                    iterable = islice(f, self.start_row, self.start_row + self.nrows)
+                for line in iterable:
+                    p: RucosRawParagraph = json.loads(line)
+                    self._fill_missed_data(p)
+                    result.append(self._parse_paragraph(p))
+
+            # get by idxs
             else:
-                iterable = islice(f, self.start_row, self.start_row + self.nrows)
-            for line in iterable:
-                p: RucosRawParagraph = json.loads(line)
-                self._fill_missed_data(p)
-                result.append(self._parse_paragraph(p))
+                lines = f.readlines()
+                for idx in self.text_idxs:
+                    p: RucosRawParagraph = json.loads(lines[idx])   
+                    self._fill_missed_data(p)
+                    result.append(self._parse_paragraph(p))
         return result
 
     def _fill_missed_data(self, p: RucosRawParagraph) -> None:
