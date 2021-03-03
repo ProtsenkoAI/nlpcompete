@@ -81,7 +81,7 @@ class SentPairBinaryClassifier(nn.Module):
 
     def _load_transformer(self):
         if self.transformer_weights_path is None:
-            return self._load_transformer()
+            return transformers.AutoModel.from_pretrained(self.mname, cache_dir=self.cache_dir)
         else:
             bert_state = torch.load(self.transformer_weights_path)
             bert_lm = transformers.BertForMaskedLM.from_pretrained(self.mname)
