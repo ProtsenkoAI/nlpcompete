@@ -28,17 +28,7 @@ class SentPairBinaryClassifier(nn.Module):
         self.head_nneurons = head_nneurons
         self.use_hidden_pooling = use_hidden_pooling
         self.transformer_weights_path = transformer_weights_path
-        if transformer_weights_path is None:
-            self.transformer = self._load_transformer()
-        else:
-            bert_state = torch.load(transformer_weights_path)
-            bert_lm = transformers.BertForMaskedLM.from_pretrained(mname)
-            bert_lm.load_state_dict(bert_state)
-
-            bert = transformers.AutoModel.from_pretrained(mname)
-            bert.bert = bert_lm.bert
-            self.transformer = bert
-
+        self.transformer = self._load_transformer()
 
         self.transformer_out_size = self._get_transformer_out_size(self.transformer)
 
@@ -89,8 +79,17 @@ class SentPairBinaryClassifier(nn.Module):
         if not device is None:
             self.to(device)
 
-    def _load_transformer(self) -> transformers.PreTrainedModel:
-        return transformers.AutoModel.from_pretrained(self.mname, cache_dir=self.cache_dir)
+    def _load_transformer(self):
+        if self.transformer_weights_path is None:
+            return self._load_transformer()
+        else:
+            bert_state = torch.load(self.transformer_weights_path)
+            bert_lm = transformers.BertForMaskedLM.from_pretrained(self.mname)
+            bert_lm.load_state_dict(bert_state)
+
+            bert = transformers.AutoModel.from_pretrained(self.mname)
+            bert.bert = bert_lm.bert
+            return bert
 
     def get_head(self) -> nn.Module:
         return self.head
