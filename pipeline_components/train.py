@@ -3,6 +3,7 @@ from tqdm.notebook import tqdm
 from torch.utils.data import DataLoader
 from typing import Union
 import gc, torch
+from torch.optim.swa_utils import AveragedModel
 
 from model_level.evaluating import Validator
 from model_level.updating_weights.qa_weights_updater import QAWeightsUpdater
@@ -11,7 +12,8 @@ from model_level.managing_model import ModelManager
 
 
 class Trainer:
-    def __init__(self, validator: Validator, weights_updater:  QAWeightsUpdater, saver: LocalSaver):
+    def __init__(self, validator: Validator, weights_updater:  QAWeightsUpdater, saver: LocalSaver,
+                 ):
         self.validator = validator
         self.weights_updater = weights_updater
         self.saver = saver
@@ -32,7 +34,7 @@ class Trainer:
 
         losses = []
         while True:
-            for batch in tqdm(train_loader, mininterval=1):
+            for batch in tqdm(train_loader):
                 if self._early_stopping(max_epoch, max_step, stop_patience):
                     return
                 loss_val = self.weights_updater.fit_with_batch(model_manager, batch)    
@@ -43,9 +45,12 @@ class Trainer:
                     self._eval_save_if_need(model_manager, val_loader)
                     print("Mean losses:", np.mean(losses))
                     losses = []
+
                 if (self.step_nb + 1) % 200 == 0:
                     print('Mean losses:', np.mean(losses))
                     losses = []
+
+
                 self.step_nb += 1
             self.epoch_nb += 1
 
@@ -55,6 +60,8 @@ class Trainer:
         torch.cuda.empty_cache()
 
         eval_value = self.validator.eval(manager, loader)
+
+
         safe_max = 0        
         print("_eval. Eval_value:", eval_value)
         if len(self.eval_vals) > 0:

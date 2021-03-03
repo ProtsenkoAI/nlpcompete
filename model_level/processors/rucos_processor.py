@@ -1,6 +1,7 @@
 import transformers
 import re
 import numpy as np
+from deeppavlov import configs, build_model
 
 from ..rucos_types import *
 
@@ -10,31 +11,40 @@ class RucosProcessor:
         self.mname = mname
         self.maxlen = 512
         self.tokenizer = transformers.AutoTokenizer.from_pretrained(mname)
+        self.ner_model = build_model(configs.ner.ner_rus_bert_probas, download=True)
 
     def get_init_kwargs(self) -> dict:
         return {"mname": self.mname}
 
     def preprocess(self, features: UnprocFeatures, labels: UnprocLabels=None, device: torch.device=None
                    ) -> Union[ProcFeatures, Tuple[ProcFeatures, ProcLabels]]:
-        tokenized = self.tokenize(*features)
+        tokenized, ner_out = self.tokenize_and_do_ner(*features)
         features_proc = self._preproc_tokenized(tokenized, device)
+        ner_proc = torch.tensor(ner_out, dtype=torch.float32)
+        ner_proc = ner_proc.to(device, copy=True)
         if not labels is None:
             labels_proc = self._create_tensors([labels], device)[0].float()
-            return features_proc, labels_proc
-        return features_proc
+            return (features_proc, ner_proc), labels_proc
+        return (features_proc, ner_proc)
 
     def postprocess(self, preds: ModelPreds, src_features: UnprocSubmFeatures) -> ProcSubmPreds:
         text1, text2, text_id, start, end, placeholder = src_features
         probs = preds.squeeze().cpu().detach().numpy()
         return text_id, probs, start, end, placeholder
 
-    def tokenize(self, *features):
-        text1, text2, placeholder = features
+    def tokenize_and_do_ner(self, *features):
+        text1, text2, placeholders = features
         # TODO: now working with text2 assuming that shuffle_texts=True, can cause errors otherwise
         texts = text2
         queries = text1
-        encoded = self._tokenize_with_adjust(texts, queries, placeholder)
-        return encoded
+        encoded = self._tokenize_with_adjust(texts, queries, placeholders)
+        # print("placeholders", placeholders)
+        ner_out = self.ner_model(placeholders)[1]
+        # print("plain ner_out", ner_out)
+        # print(ner_out.shape)
+        ner_out = ner_out.mean(axis=1)
+        # print("ner_out after", ner_out)
+        return encoded, ner_out
 
     def _preproc_tokenized(self, tokenized, device):
         needed_parts = [tokenized["input_ids"],

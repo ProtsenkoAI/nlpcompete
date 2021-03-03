@@ -21,6 +21,8 @@ class QAWeightsUpdater:
         # TODO: maybe change bac to BCE
         # self.criterion = nn.BCELoss()
         self.criterion = nn.CrossEntropyLoss()
+
+        # attention
         if self.use_amp:
             self.scaler = amp.GradScaler()
 
@@ -73,5 +75,6 @@ class QAWeightsUpdater:
             self.scaler.update()
         else:
             self.optimizer.step()
+
         self.lr_scheduler.step()
         self.optimizer.zero_grad()

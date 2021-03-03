@@ -53,7 +53,15 @@ class RucosSubmitter:
         for text1, text2, idx, start, end, placeholder in tqdm(loader):
             idx, probs, start, end, placeholder = manager.predict_postproc((text1, text2, idx, start, end, placeholder))
             res['idx'].extend(idx)
-            res['probs'].extend(probs[:, 1].tolist())
+
+            if probs.ndim > 1:
+                res['probs'].extend(probs[:, 1].tolist())
+            else:
+                try:
+                    res["probs"].extend([probs[1]])
+                except Exception:
+                    res["probs"].extend([-999])
+
             res['start'].extend(start)
             res['end'].extend(end)
             res['placeholder'].extend(placeholder)

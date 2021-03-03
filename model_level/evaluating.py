@@ -18,7 +18,7 @@ class Validator:
 
     def _f1_score(self, manager, test: DataLoader):
         val_df = pd.DataFrame(columns=["id", "prob", "label"])
-        for features, labels in tqdm(test, mininterval=1):
+        for features, labels in tqdm(test):
             question_idx, *features_to_preproc_forward = features
             preds, proc_labels = manager.preproc_forward(features_to_preproc_forward, labels)
             tmp_df = pd.DataFrame({"id": question_idx,
