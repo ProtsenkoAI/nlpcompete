@@ -7,13 +7,22 @@ from ..types.rucos.raw import RucosRawParagraph, RucosRawEntity, RucosRawQuery, 
 
 
 class RucosDataContainer:
-    def __init__(self, path: str, has_labels: bool = True, nrows: Optional[int] = None,
-                 start_row=0, text_idxs:List[int]=None, query_placeholder_union_mode="replace"):
+    def __init__(
+            self,
+            path: str,
+            has_labels: bool = True,
+            nrows: Optional[int] = None,
+            start_row=0,
+            text_idxs: List[int] = None,
+            query_placeholder_union_mode="replace",
+            extend_entities_with_answers: bool = False
+    ):
         self.path = path
         self.nrows = nrows
         self.has_labels = has_labels
         self.start_row = start_row
         self.text_idxs = text_idxs
+        self.extend_entities_with_answers = extend_entities_with_answers
 
         if query_placeholder_union_mode not in ["replace", "concatenate"]:
             raise ValueError(query_placeholder_union_mode)
@@ -46,11 +55,15 @@ class RucosDataContainer:
             entity['text'] = p['passage']['text'][entity['start']:entity['end']]
 
     def _parse_paragraph(self, p: RucosRawParagraph) -> RucosParsedParagraph:
-        filtered_candidates = self._filter_duplicate_entities(p['passage']['entities'])
+        if self.extend_entities_with_answers:
+            candidates = p['passage']['entities'] + p['qas'][0]['answers']
+        else:
+            candidates = p['passage']['entities']
+        candidates = self._filter_duplicate_entities(candidates)
         return RucosParsedParagraph(
             text1=p['passage']['text'],
             idx=p['idx'],
-            candidates=[self._parse_candidate(e, p['qas'][0], p['passage']) for e in filtered_candidates]
+            candidates=[self._parse_candidate(e, p['qas'][0], p['passage']) for e in candidates]
         )
 
     def _filter_duplicate_entities(self, entities: List[RucosRawEntity]) -> List[RucosRawEntity]:
