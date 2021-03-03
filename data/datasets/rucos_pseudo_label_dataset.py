@@ -32,7 +32,7 @@ class RucosPseudoLabelDataset(SizedDataset):
             text2 = next(iter(filter(
                 lambda item: item.start_char == row['start'] and item.end_char == row['end'],
                 current_paragraph.candidates
-            )))
+            ))).text2
             if self.switch_texts:
                 text1, text2 = text2, text1
             result.append(

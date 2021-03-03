@@ -50,7 +50,7 @@ class RucosSubmitter:
             'end': [],
             'placeholder': []
         }
-        for text1, text2, idx, start, end, placeholder in tqdm(loader):
+        for text1, text2, idx, start, end, placeholder in tqdm(loader, mininterval=1):
             idx, probs, start, end, placeholder = manager.predict_postproc((text1, text2, idx, start, end, placeholder))
             res['idx'].extend(idx)
 

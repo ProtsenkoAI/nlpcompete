@@ -34,7 +34,7 @@ class Trainer:
 
         losses = []
         while True:
-            for batch in tqdm(train_loader):
+            for batch in tqdm(train_loader, mininterval=1):
                 if self._early_stopping(max_epoch, max_step, stop_patience):
                     return
                 loss_val = self.weights_updater.fit_with_batch(model_manager, batch)    
