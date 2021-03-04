@@ -10,9 +10,13 @@ from model_level.managing_model import ModelManager
 
 class QAWeightsUpdater:
     def __init__(self, lr=2e-5, weight_decay=1e-2, accum_iters=1, warmup=0, lr_end=1e-7,
-                 use_amp=False):
+                 use_amp=False, lr_head=None):
 
         self.lr = lr
+        if lr_head is None:
+            self.lr_head = lr
+        else:
+            self.lr_head = lr_head
         self.weight_decay = weight_decay
         self.accum_iters = accum_iters
         self.warmup = warmup
@@ -33,8 +37,10 @@ class QAWeightsUpdater:
         self.step_idx = 0
 
     def prepare_for_fit(self, model_manager: ModelManager, nb_train_steps: int):
-        self.optimizer = optim.AdamW(model_manager.get_model().parameters(),
-                                     lr=self.lr, weight_decay=self.weight_decay)
+        self.optimizer = optim.AdamW([
+            {'params': model_manager.get_model().transformer.parameters()},
+            {'params': model_manager.get_model().head.parameters(), 'lr': self.lr_head}
+        ], lr=self.lr, weight_decay=self.weight_decay)
 
         total_steps = nb_train_steps // self.accum_iters
         total_steps = max(total_steps, 1)  # if nb_train_steps < self.accum_iters

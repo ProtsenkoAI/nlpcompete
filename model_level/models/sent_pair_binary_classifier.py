@@ -45,7 +45,10 @@ class SentPairBinaryClassifier(nn.Module):
                 "droprate": self.droprate,
                 "head_nlayers": self.head_nlayers,
                 "head_nneurons": self.head_nneurons,
-                "transformer_weights_path": self.transformer_weights_path}
+                "transformer_weights_path": self.transformer_weights_path,
+                "use_ner": self.use_ner,
+                "ner_out_len": self.ner_out_len,
+                }
 
     def _get_transformer_out_size(self, transformer: transformers.PreTrainedModel) -> int:
         """To create head of model we need to know output shape of transformer that's dependent on

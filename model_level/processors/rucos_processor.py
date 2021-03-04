@@ -50,7 +50,7 @@ class RucosProcessor:
         ner_out_max = ner_out_raw.max(axis=1)
         ner_out_first = ner_out_raw[:, 0, :].squeeze()
         ner_out = np.concatenate([ner_out_mean, ner_out_max, ner_out_first], axis=1)
-        print("ner_out after", ner_out.shape)
+        # print("ner_out after", ner_out.shape)
         return encoded, ner_out
 
     def _preproc_tokenized(self, tokenized, device):
