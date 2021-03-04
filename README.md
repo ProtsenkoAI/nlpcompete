@@ -1,5 +1,5 @@
 # nti-ai-pipeline
-## Authors: [Georgii Surkov](https://github.com/GeorgiySurkov) and [Protsenko Arseny](https://github.com/ProtsenkoAI)
+## Team: <̷͊s̸̕o̵͒s̶̈́>̶̀, Authors: [Georgii Surkov](https://github.com/GeorgiySurkov) and [Protsenko Arseny](https://github.com/ProtsenkoAI)
 
 Наше решение, которое дало скор 0.8053 на public было blending'ом трёх бертов, обученных на kfold из train-части датасета. 
 Основные моменты решения:
