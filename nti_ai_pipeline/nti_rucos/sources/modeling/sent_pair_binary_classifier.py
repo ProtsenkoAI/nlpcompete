@@ -6,6 +6,7 @@ from typing import Tuple
 
 
 class SentPairBinaryClassifier(ModelWithTransformer):
+    # TODO: maybe pass pretrained weights not in file but more simple way (nn.Module obj)
     # TODO: (architecture) make transformer model to be a composition of transformer and head
     def __init__(
             self,
