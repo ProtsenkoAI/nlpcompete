@@ -1,5 +1,5 @@
 from .rucos_standard_dataset import RucosStandardDataset
-from .parsed import RucosParsedParagraph, RucosParsedCandidate
+from .parsed_types import RucosParsedParagraph, RucosParsedCandidate
 from nti_rucos.sources.data.dataset_types import RucosSubmissionSample
 from .dataset_types import Sample
 

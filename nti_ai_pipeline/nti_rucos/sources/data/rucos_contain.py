@@ -2,7 +2,7 @@ import json
 from typing import List, Set
 
 # TODO: move types from legacy
-from .parsed import RucosParsedParagraph, RucosParsedCandidate
+from .parsed_types import RucosParsedParagraph, RucosParsedCandidate
 from legacy.data.types.rucos.raw import RucosRawParagraph, RucosRawEntity, RucosRawQuery, RucosRawPassage
 from pipeline.data import BaseContainer
 

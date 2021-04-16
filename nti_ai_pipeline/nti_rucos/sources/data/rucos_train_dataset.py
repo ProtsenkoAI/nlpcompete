@@ -1,7 +1,7 @@
 from .rucos_standard_dataset import RucosStandardDataset
 from .dataset_types import RucosSampleFeatures
 from .dataset_types import Sample
-from .parsed import RucosParsedParagraph, RucosParsedCandidate
+from .parsed_types import RucosParsedParagraph, RucosParsedCandidate
 
 
 class RucosTrainDataset(RucosStandardDataset):

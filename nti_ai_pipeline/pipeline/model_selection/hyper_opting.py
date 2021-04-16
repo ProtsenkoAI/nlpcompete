@@ -6,6 +6,8 @@ from .types import ParamsWithResults
 
 
 class HyperOpter:
+    # TODO: the class violates single responsibility principle (storing trials, running opt, reversing metric value),
+    #   have to separate to parts
     def __init__(self, func: Callable, higher_is_better=False, trials_save_dir="./",
                  trials_file_name="saved_trials"):
         self.func = self._wrap_if_needed(func, higher_is_better)

@@ -2,7 +2,7 @@ from typing import List, Union
 from abc import ABC, abstractmethod
 
 from .dataset_types import Sample
-from .parsed import RucosParsedParagraph, RucosParsedCandidate
+from .parsed_types import RucosParsedParagraph, RucosParsedCandidate
 
 
 class RucosStandardDataset(ABC):
