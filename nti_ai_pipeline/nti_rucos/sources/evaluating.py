@@ -1,35 +1,49 @@
-from tqdm.notebook import tqdm
+from typing import Tuple
 import numpy as np
 import pandas as pd
-from torch.utils.data import DataLoader
 
 from pipeline.modeling import ModelManager
 from pipeline.training import Validator
 
 
 class RucosValidator(Validator):
-    def __init__(self):
+    AllPreds = pd.DataFrame
+    AllLabels = pd.DataFrame
+    Preds = pd.DataFrame
+    Labels = pd.DataFrame
+
+    def __init__(self, tqdm_mode="notebook"):
         # TODO: metrics are hardcoded now, maybe later we'll need to get them in arguments
-        self.metric = self._f1_score
+        self.metric = self._score_f1_from_df
 
-    def eval(self, manager: ModelManager, test_loader: DataLoader) -> float:
-        metric_val = self.metric(manager, test_loader)
-        print("Eval value:", metric_val)
-        return metric_val
+        self.preds_df = pd.DataFrame(columns=["id", "prob"])
+        self.labels_df = pd.DataFrame(columns=["labels"])
+        super().__init__(tqdm_mode)
 
-    def _f1_score(self, manager, test: DataLoader):
-        val_df = pd.DataFrame(columns=["id", "prob", "label"])
-        for features, labels in tqdm(test, mininterval=1):  # TODO: use get_tqdm from util
-            question_idx, *features_to_preproc_forward = features
-            preds, proc_labels = manager.preproc_forward(features_to_preproc_forward, labels)
-            tmp_df = pd.DataFrame({"id": question_idx,
-                                   "prob": preds.cpu().detach().numpy()[:, 1],
-                                   "label": proc_labels.cpu().detach().numpy()
-                                   })
-            val_df = val_df.append(tmp_df, ignore_index=True)
+    def pred_batch(self, manager: ModelManager, batch) -> Tuple[Preds, Labels]:
+        features, labels = batch
+        question_idx, *features_to_preproc_forward = features
+        preds, proc_labels = manager.preproc_forward(features_to_preproc_forward, labels)
+        preds_df = pd.DataFrame({"id": question_idx,
+                                 "prob": preds.cpu().detach().numpy()[:, 1]
+                                 })
+        labels_df = pd.DataFrame({"label": proc_labels.cpu().detach().numpy()})
+        return preds_df, labels_df
 
-        score = self._score_f1_from_df(val_df)
-        return score
+    def store_batch_res(self, preds, labels):
+        self.preds_df = self.preds_df.append(preds, ignore_index=True)
+        self.labels_df = self.labels_df.append(labels, ignore_index=True)
+
+    def get_all_preds_and_labels(self) -> Tuple[AllPreds, AllLabels]:
+        return self.preds_df, self.labels_df
+
+    def calc_metric(self, preds: AllPreds, labels: AllLabels) -> float:
+        preds_and_labels = pd.concat([preds, labels], axis=1)
+        return self.metric(preds_and_labels)
+
+    def clear_accumulated_preds_and_labels(self):
+        self.preds_df = pd.DataFrame(columns=["id", "prob"])
+        self.labels_df = pd.DataFrame(columns=["labels"])
 
     def _score_f1_from_df(self, df):
         text_groups = df.groupby("id")

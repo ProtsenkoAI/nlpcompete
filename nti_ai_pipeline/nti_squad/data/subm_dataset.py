@@ -2,8 +2,8 @@ from typing import List
 
 
 from nti_squad.data.contain import QADataContainer
-from legacy.data.types.qa.parsed import ParsedParagraph
-from legacy.data.types.qa.dataset import SampleWithId, SampleFeaturesWithId
+from .types_parsed import ParsedParagraph
+from .types_dataset import SampleWithId, SampleFeaturesWithId
 
 
 class SubmDataset:

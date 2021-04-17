@@ -6,9 +6,9 @@ from typing import Tuple, List, Union
 
 
 class TransformerQA(nn.Module):
-    # TODO: (architecture) make transformer model to be a composition of transformer and head
+    # TODO: inherit from base
     def __init__(self, mname: str, cache_dir="./cache_models/",
-                 droprate=0.3, head_nlayers=1, head_nneurons=768):
+                 droprate=0.3, head_nlayers=1, head_nneurons=768, classif_thresh=0.5):
         """
         :param mname: a Model name listed in https://huggingface.co/models
         """
@@ -18,7 +18,7 @@ class TransformerQA(nn.Module):
         self.droprate = droprate
         self.head_nlayers = head_nlayers
         self.head_nneurons = head_nneurons
-        self.classification_thresh = 0.5
+        self.classification_thresh = classif_thresh
 
         self.transformer = self._load_transformer()
         self.transformer_out_size = self._get_transformer_out_size(self.transformer)
@@ -81,13 +81,13 @@ class TransformerQA(nn.Module):
             
         return comps
 
-    def reset_weights(self, device:Union[None, torch.device]=None) -> None:
+    def reset_weights(self, device: Union[None, torch.device] = None) -> None:
         self.transformer = self._load_transformer()
         for layer in self.head.children():
             if hasattr(layer, 'reset_parameters'):
                 layer.reset_parameters()
 
-        if not device is None:
+        if device is not None:
             self.to(device)
 
     def _load_transformer(self) -> transformers.PreTrainedModel:

@@ -11,7 +11,6 @@ class QAProcAssistant:
         self.maxlen = 512
         self.max_answer_token_len = max_answer_token_len
 
-
     def features_from_tokenized(self, tokenizer_out, device) -> ProcFeatures:
         # maybe later we'll need a tokenizer wrapper to return this parts
         needed_parts = [tokenizer_out["input_ids"],
