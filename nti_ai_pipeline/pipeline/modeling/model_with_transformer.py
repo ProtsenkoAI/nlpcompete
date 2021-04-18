@@ -6,12 +6,15 @@ from abc import ABC, abstractmethod
 
 
 class ModelWithTransformer(nn.Module, ABC):
-    def __init__(self, transformer_name: str, pretrain_path: str, device: Optional[torch.device] = None):
+    # TODO: maybe add device to subtypes
+    def __init__(self, transformer_name: str, pretrain_path: Optional[str] = None,
+                 device: Optional[torch.device] = None, cache_dir: Optional[str] = None):
         super().__init__()
+        self.device = device
+        self.cache_dir = cache_dir
         self.mname = transformer_name
         self.pretrain_path = pretrain_path
         self.transformer = self._load_transformer()
-        self.device = device
         self.to(device)
 
     def reset_weights(self) -> None:
@@ -23,12 +26,13 @@ class ModelWithTransformer(nn.Module, ABC):
         if self.device is not None:
             self.to(self.device)
 
-    def _load_transformer(self):
-        # TODO: rewrite in more robust way
+    def _load_transformer(self) -> transformers.PreTrainedModel:
+        # TODO: test that works properly
         if self.pretrain_path is None:
-            return transformers.AutoModel.from_pretrained(self.mname)
+            return transformers.AutoModel.from_pretrained(self.mname, cache_dir=self.cache_dir)
         else:
-            bert_state = torch.load(self.pretrain_path)
+            bert_state = torch.load(self.transformer_weights_path)
+
             bert_lm = transformers.BertForMaskedLM.from_pretrained(self.mname)
             bert_lm.load_state_dict(bert_state)
 
@@ -47,4 +51,12 @@ class ModelWithTransformer(nn.Module, ABC):
 
     @abstractmethod
     def get_head(self) -> nn.Module:
+        ...
+
+    @abstractmethod
+    def forward(self, features) -> torch.Tensor:
+        ...
+
+    @abstractmethod
+    def get_init_kwargs(self) -> dict:
         ...

@@ -2,8 +2,6 @@ import torch.nn as nn
 from pipeline.modeling import ModelWithTransformer
 import torch
 
-from typing import Tuple
-
 
 class SentPairBinaryClassifier(ModelWithTransformer):
     # TODO: maybe pass pretrained weights not in file but more simple way (nn.Module obj)
@@ -22,7 +20,7 @@ class SentPairBinaryClassifier(ModelWithTransformer):
         """
         :param mname: a Model name listed in https://huggingface.co/models
         """
-        super().__init__(mname, transformer_weights_path)
+        super().__init__(transformer_name=mname, pretrain_path=transformer_weights_path)
         self.droprate = droprate
         self.head_nlayers = head_nlayers
         self.head_nneurons = head_nneurons
@@ -44,7 +42,7 @@ class SentPairBinaryClassifier(ModelWithTransformer):
                 "ner_out_len": self.ner_out_len,
                 }
 
-    def forward(self, inp) -> Tuple[torch.Tensor, torch.Tensor]:
+    def forward(self, inp) -> torch.Tensor:
         """
         """
         if self.use_ner:
@@ -53,7 +51,6 @@ class SentPairBinaryClassifier(ModelWithTransformer):
             transformer_inputs = inp
             
         x = self.get_transformer()(*transformer_inputs)
-        # print(x)
         if self.use_hidden_pooling:
             x = x['last_hidden_state']
         else:
@@ -61,7 +58,7 @@ class SentPairBinaryClassifier(ModelWithTransformer):
         if self.use_ner:
             x = torch.cat([x, ner_probs], dim=1)
             assert len(x) == len(ner_probs)
-        x = self.head(x)
+        x = self.get_head()(x)
         return x
 
     def _create_head(self, droprate: float, n_layers: int, head_nneurons: int) -> nn.Module:

@@ -5,6 +5,8 @@ import torch
 
 
 class BaseProcessor(ABC):
+    # TODO: in both QAProcAssistant and RucosProcessor there are functions to convert between tokens and char idxs
+    #   so it will be cool to create util methods for this purpose
     @abstractmethod
     def preprocess(self, features, labels=None, device: Optional[torch.device] = None
                    ) -> Union[BatchWithLabels, BatchWithoutLabels]:

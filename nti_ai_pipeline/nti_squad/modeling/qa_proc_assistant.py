@@ -1,7 +1,9 @@
 import transformers
+import torch
+from typing import List
 import numpy as np
 
-from legacy.model_level.qa_types import *
+from .types import ProcFeatures
 
 
 class QAProcAssistant:

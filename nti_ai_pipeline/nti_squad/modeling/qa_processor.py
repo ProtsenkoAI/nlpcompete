@@ -2,11 +2,11 @@ import torch
 from typing import Union, Tuple
 
 from .qa_proc_assistant import QAProcAssistant
-
+from pipeline.modeling import BaseProcessor
 from .types import UnprocLabels, UnprocFeatures, ProcLabels, ProcFeatures, TrueTokenIdxs
 
 
-class QADataProcessor:
+class QADataProcessor(BaseProcessor):
     def __init__(self, mname: str, max_answer_token_len=50):
         self.mname = mname
         self.max_answer_token_len = max_answer_token_len
@@ -28,6 +28,12 @@ class QADataProcessor:
             labels_proc = self._preproc_labels(labels_in_token_format, device)
             return features_proc, labels_proc
         return features_proc
+
+    def after_forward(self, raw_model_out):
+        start_logits, end_logits = raw_model_out.split(1, dim=-1)
+        start_logits = start_logits.squeeze(-1)
+        end_logits = end_logits.squeeze(-1)
+        return start_logits, end_logits
 
     def postprocess(self, preds, src_features, src_labels=None):
         src_texts, src_questions = src_features
