@@ -3,7 +3,7 @@ from typing import List, Set
 
 # TODO: move types from legacy
 from .parsed_types import RucosParsedParagraph, RucosParsedCandidate
-from legacy.data.types.rucos.raw import RucosRawParagraph, RucosRawEntity, RucosRawQuery, RucosRawPassage
+from .types_raw import RucosRawParagraph, RucosRawEntity, RucosRawQuery, RucosRawPassage
 from pipeline.data import BaseContainer
 
 

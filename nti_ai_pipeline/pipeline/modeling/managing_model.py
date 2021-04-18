@@ -1,8 +1,8 @@
 import torch
-from torch import nn
 
 from .base_processor import BaseProcessor
 from ..saving.model_and_processor_saver import ModelAndProcessorSaver
+from .model_with_transformer import ModelWithTransformer
 
 from typing import Union, Tuple
 from .types import ModelPreds, ProcLabels
@@ -14,7 +14,7 @@ class ModelManager:
     Model and processor shouldn't be used by themselves, without manager (except some torch-related
     operations with model, eg getting parameters of model to save or create optimizer).
     """
-    def __init__(self, model: nn.Module, processor: BaseProcessor, device: torch.device,
+    def __init__(self, model: ModelWithTransformer, processor: BaseProcessor, device: torch.device,
                  saver: ModelAndProcessorSaver):
         self.model = model
         self.processor = processor
@@ -24,7 +24,7 @@ class ModelManager:
         self.model.to(self.device)
         self.saver = saver
 
-    def get_model(self) -> nn.Module:
+    def get_model(self) -> ModelWithTransformer:
         return self.model
 
     def reset_model_weights(self):

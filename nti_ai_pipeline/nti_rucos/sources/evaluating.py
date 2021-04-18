@@ -20,14 +20,14 @@ class RucosValidator(Validator):
         self.labels_df = pd.DataFrame(columns=["labels"])
         super().__init__(tqdm_mode)
 
-    def pred_batch(self, manager: ModelManager, batch) -> Tuple[Preds, Labels]:
+    def pred_batch(self, manager: ModelManager, batch: Tuple) -> Tuple[Preds, Labels]:
         features, labels = batch
         question_idx, *features_to_preproc_forward = features
         preds, proc_labels = manager.preproc_forward(features_to_preproc_forward, labels)
         preds_df = pd.DataFrame({"id": question_idx,
                                  "prob": preds.cpu().detach().numpy()[:, 1]
                                  })
-        labels_df = pd.DataFrame({"label": proc_labels.cpu().detach().numpy()})
+        labels_df = pd.DataFrame({"labels": proc_labels.cpu().detach().numpy()})
         return preds_df, labels_df
 
     def store_batch_res(self, preds, labels):
@@ -38,7 +38,12 @@ class RucosValidator(Validator):
         return self.preds_df, self.labels_df
 
     def calc_metric(self, preds: AllPreds, labels: AllLabels) -> float:
+       # print("preds", preds)
+        #print("labels", labels)
+        #print(len(preds), len(labels))
+
         preds_and_labels = pd.concat([preds, labels], axis=1)
+        #print("after")
         return self.metric(preds_and_labels)
 
     def clear_accumulated_preds_and_labels(self):
@@ -50,6 +55,6 @@ class RucosValidator(Validator):
         sample_f1s = []
         for _, group in text_groups:
             best_candidate = group.sort_values("prob", ascending=False).iloc[0]
-            f1_sample = best_candidate["label"]  # if best candidate is labeled 1, then f1 of this sample is 1
+            f1_sample = best_candidate["labels"]  # if best candidate is labeled 1, then f1 of this sample is 1
             sample_f1s.append(f1_sample)
         return float(np.mean(sample_f1s))

@@ -1,12 +1,11 @@
 import transformers
-from torch.utils import data as torch_data
 from transformers.data.data_collator import DataCollatorForLanguageModeling
-import torch
 from glob import glob
 import os
 
 from transformers import BertForMaskedLM, BertTokenizer
 from pipeline.data import BaseContainer
+from .mlm_tests_dataset import MLMTextsDataset
 
 
 class MLMBertPretrainer:
@@ -27,8 +26,8 @@ class MLMBertPretrainer:
         pre_train_bert, tokenizer = self._get_model_and_tokenizer(mname)
 
         train_samples, val_samples = data_container.train_test_split(test_size=test_size)
-        train_dataset = TextsDataset(train_samples, tokenizer)
-        val_dataset = TextsDataset(val_samples, tokenizer)
+        train_dataset = MLMTextsDataset(train_samples, tokenizer)
+        val_dataset = MLMTextsDataset(val_samples, tokenizer)
 
         self._train_model(pre_train_bert, tokenizer, train_dataset, val_dataset,
                           nepochs=nepochs, eval_every=eval_every, save_every=save_every,
@@ -72,22 +71,3 @@ class MLMBertPretrainer:
         checkpoint_dir_files = glob(os.path.join(self.checkpoints_dir, "*"))
         sorted_by_step_decrease = sorted(checkpoint_dir_files)[::-1]
         return sorted_by_step_decrease[0]
-
-
-class TextsDataset(torch_data.Dataset):
-    def __init__(self, text_samples, tokenizer, max_tokens_num=512):
-        self.max_tokens_num = max_tokens_num
-        self.all_train_texts = []
-
-        self.tokenizer = tokenizer
-        for text_data in text_samples:
-            self.all_train_texts.append(text_data.text1)
-
-    def __getitem__(self, idx):
-        text = self.all_train_texts[idx]
-        ids = self.tokenizer(text, add_special_tokens=True, truncation=True,
-                             max_length=self.max_tokens_num)["input_ids"]
-        return torch.tensor(ids, dtype=torch.long)
-
-    def __len__(self):
-        return len(self.all_train_texts)

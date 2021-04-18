@@ -1,6 +1,5 @@
 from typing import NamedTuple, Any
 
-
 Sample = Any
 
 
@@ -15,7 +14,7 @@ class RucosSample(NamedTuple):
     label: int
 
 
-class RucosEvalSampleFeatures(NamedTuple):
+class RucosEvalSampleFeatures(NamedTuple, RucosSampleFeatures):
     question_idx: int
     text1: str
     text2: str

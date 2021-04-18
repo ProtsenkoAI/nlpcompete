@@ -6,6 +6,7 @@ from ..ensembling.blending.data_predictor import DataPredictor  # TODO: move pre
 
 
 class BasePseudoLabeler(ABC):
+    # TODO: move to pipeline
     SampleFeatures = Any
 
     def run(self, model_manager, data_loader):
@@ -16,7 +17,8 @@ class BasePseudoLabeler(ABC):
         chosen_features = self.filter_features(data_loader, chosen_sample_idxs)
 
         assert len(chosen_features) == len(generated_labels)
-        features_with_labels = list(zip(chosen_features, generated_labels))
+        # features_with_labels = list(zip(chosen_features, generated_labels))
+        features_with_labels = self.union_features_with_labels(chosen_features, generated_labels)
         return features_with_labels
 
     @abstractmethod
@@ -25,4 +27,8 @@ class BasePseudoLabeler(ABC):
 
     @abstractmethod
     def filter_features(self, loader: DataLoader, idxs: List[int]) -> List[SampleFeatures]:
+        ...
+
+    @abstractmethod
+    def union_features_with_labels(self, features, labels):
         ...

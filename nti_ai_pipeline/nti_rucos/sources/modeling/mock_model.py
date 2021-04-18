@@ -8,9 +8,11 @@ class MockModel(nn.Module):
     Model imitating model for NTI RUCOS to test other components without problems with RAM
     """
     def __init__(self, *args, use_ner=False, **kwargs):
+        super().__init__()
         self.use_ner = use_ner
         self.device = torch.device("cpu")
-        super().__init__()
+        self.transformer = nn.Linear(512, 2)
+        self.head = nn.Linear(2, 2)
 
     def reset_weights(self):
         ...
@@ -20,9 +22,20 @@ class MockModel(nn.Module):
             ner_out, transformer_inp = features
         else:
             transformer_inp = features
-        batch_size = transformer_inp.shape[0]
-        return torch.zeros((batch_size, 2), device=self.device)
+        first_tensor_from_features = transformer_inp[0].float()
+        transformer_out = self.get_transformer()(first_tensor_from_features)
+        return self.get_head()(transformer_out)
 
     def to(self, device):
         self.device = device
+        self.get_head().to(device)
         super().to(device)
+
+    def get_transformer(self):
+        return self.transformer
+
+    def get_head(self):
+        return self.head
+
+    def get_init_kwargs(self):
+        return {}

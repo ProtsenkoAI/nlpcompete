@@ -3,6 +3,7 @@ from torch.utils.data import DataLoader
 import numpy as np
 
 from .base_pseudo_labeler import BasePseudoLabeler
+from ..data.dataset_types import RucosSampleFeatures, RucosSample
 
 
 class RegressionPseudoLabeler(BasePseudoLabeler):
@@ -30,8 +31,8 @@ class RegressionPseudoLabeler(BasePseudoLabeler):
         # TODO: refactor
         if self.chosen_proportion is not None:
             number_of_preds_to_choose = len(predictions) * self.chosen_proportion
-            num_pos_samples = number_of_preds_to_choose * self.pos_to_neg_ratio
-            num_neg_samples = number_of_preds_to_choose / self.pos_to_neg_ratio
+            num_pos_samples = int(number_of_preds_to_choose * self.pos_to_neg_ratio)
+            num_neg_samples = int(number_of_preds_to_choose / self.pos_to_neg_ratio)
         else:
             num_pos_samples = len(predictions)
             num_neg_samples = len(predictions)
@@ -48,16 +49,22 @@ class RegressionPseudoLabeler(BasePseudoLabeler):
 
         neg_idxs = [idx for idx, value in enumerate(predictions) if value in neg_samples]
         pos_idxs = [idx for idx, value in enumerate(predictions) if value in pos_samples]
-        pos_and_neg_idxs_union = list(set(*neg_idxs, *pos_idxs))
-        labels = [idx for idx in pos_and_neg_idxs_union if idx in pos_idxs]
+        pos_and_neg_idxs_union = list(set(neg_idxs + pos_idxs))
+        labels = [idx in pos_idxs for idx in pos_and_neg_idxs_union]
         return pos_and_neg_idxs_union, labels
 
     def filter_features(self, loader: DataLoader, idxs: List[int]) -> List[BasePseudoLabeler.SampleFeatures]:
         chosen_features = []
         sample_idx = 0
         for batch in loader:
-            for sample in batch:
+            for (text1, text2, placeholder) in zip(batch.text1, batch.text2, batch.placeholder):
                 if sample_idx in idxs:
-                    chosen_features.append(sample)
+                    chosen_features.append(RucosSampleFeatures(text1, text2, placeholder))
                 sample_idx += 1
         return chosen_features
+
+    def union_features_with_labels(self, features, labels):
+        out = []
+        for sample_features, label in zip(features, labels):
+            out.append(RucosSample(sample_features, label))
+        return out

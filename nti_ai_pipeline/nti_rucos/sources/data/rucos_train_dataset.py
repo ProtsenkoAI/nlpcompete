@@ -5,9 +5,6 @@ from .parsed_types import RucosParsedParagraph, RucosParsedCandidate
 
 
 class RucosTrainDataset(RucosStandardDataset):
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs, )
-
     def create_sample(self, paragraph: RucosParsedParagraph, candidate: RucosParsedCandidate) -> Sample:
         text1 = paragraph.text1
         text2 = candidate.text2

@@ -37,8 +37,8 @@ class WeightsUpdater:
 
     def prepare_for_fit(self, model_manager: ModelManager, nb_train_steps: int):
         self.optimizer = self.optimizer_class([
-            {'params': model_manager.get_model().transformer.parameters()},
-            {'params': model_manager.get_model().head.parameters(), 'lr': self.lr_head}
+            {'params': model_manager.get_model().get_transformer().parameters()},
+            {'params': model_manager.get_model().get_head().parameters(), 'lr': self.lr_head}
         ], lr=self.lr, weight_decay=self.weight_decay)
 
         total_steps = nb_train_steps // self.accum_iters
@@ -51,7 +51,6 @@ class WeightsUpdater:
     def fit_with_batch(self, manager: ModelManager, batch: Tuple[Tuple[List[str], List[str]],
                                                                  Tuple[List[int], List[int]]]) -> float:
         # TODO: we don't split features and labels so probably have to get labels from preproc_forward of manager
-        print("batch", batch)
         inputs, labels = batch
         loss = self._calc_loss(manager, inputs, labels)
         self._backward_loss(loss)

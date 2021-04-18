@@ -1,9 +1,11 @@
 import transformers
 import re
 import numpy as np
+import torch
 from deeppavlov import configs, build_model
+from typing import Union, List
 
-from .types import *
+from .types import UnprocLabels, UnprocFeatures, ModelPreds, UnprocSubmFeatures, ProcSubmPreds, SubmPred
 from pipeline.modeling.types import BatchWithLabels, BatchWithoutLabels
 from pipeline.modeling import BaseProcessor
 
@@ -49,7 +51,10 @@ class RucosProcessor(BaseProcessor):
     def postprocess(self, preds: ModelPreds, src_features: UnprocSubmFeatures) -> ProcSubmPreds:
         text1, text2, text_id, start, end, placeholder = src_features
         probs = preds.squeeze().cpu().detach().numpy()
-        return text_id, probs, start, end, placeholder
+        out = []
+        for prob in probs:
+            out.append(SubmPred(text_id, prob, start, end, placeholder))
+        return out
 
     def tokenize(self, *features):
         text1, text2, placeholders = features

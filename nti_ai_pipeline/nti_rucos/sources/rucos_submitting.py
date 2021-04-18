@@ -16,7 +16,7 @@ class RucosSubmitter(Submitter):
         return batch_preds
 
     def form_submission(self, preds: List[SamplePrediction]) -> SubmObj:
-        df = pd.DataFrame(data=preds)
+        df = pd.DataFrame(data=preds, columns=["idx", "probs", "start", "end", "placeholder"])
         subm = []
         for idx, sub_df in df.groupby('idx'):
             sorted_df = sub_df.sort_values(by='probs', ascending=False)
@@ -26,7 +26,7 @@ class RucosSubmitter(Submitter):
                 'idx': int(answer['idx']),
                 'end': int(answer['end']),
                 'start': int(answer['start']),
-                'text': answer['placeholder'],
+                'text': answer['placeholder'][0],
             })
         return subm
 
