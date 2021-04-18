@@ -6,4 +6,5 @@ submissions/
 data/
 **/*.pt
 **/*.json
-
+**/runs/
+**/cache_models/

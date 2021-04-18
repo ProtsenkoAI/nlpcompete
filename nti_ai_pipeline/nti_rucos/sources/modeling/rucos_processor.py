@@ -49,10 +49,12 @@ class RucosProcessor(BaseProcessor):
         return BatchWithoutLabels(features)
 
     def postprocess(self, preds: ModelPreds, src_features: UnprocSubmFeatures) -> ProcSubmPreds:
-        text1, text2, text_id, start, end, placeholder = src_features
+        text1, text2, text_ids, starts, ends, placeholders = src_features
         probs = preds.squeeze().cpu().detach().numpy()
         out = []
-        for prob in probs:
+        for text_id, classes_probs, start, end, placeholder in zip(text_ids, probs, starts, ends, placeholders):
+            # classes probs is array with 2 numbers: out for pos and neg class, so we take weighted positive prob
+            prob = classes_probs[1] / sum(classes_probs)
             out.append(SubmPred(text_id, prob, start, end, placeholder))
         return out
 

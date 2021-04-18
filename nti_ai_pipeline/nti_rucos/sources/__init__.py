@@ -5,3 +5,4 @@ from . import data
 from . import evaluating
 from . import rucos_submitting
 from . import pseudo_labeling
+from . import pretraining
