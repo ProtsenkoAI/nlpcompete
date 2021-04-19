@@ -56,7 +56,7 @@ class TransformerQA(ModelWithTransformer):
                                       ) -> List[nn.Module]:
         inp_hidden_size, out_hidden_size = nneurons, nneurons
         if is_first:
-            inp_hidden_size = self.transformer_out_size
+            inp_hidden_size = self.get_transformer_out_size()
         if is_last:
             out_hidden_size = 2
 

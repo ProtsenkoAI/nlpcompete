@@ -4,13 +4,14 @@ from torch import nn
 from torch.cuda import amp
 import transformers
 from typing import List, Tuple
+from abc import ABC, abstractmethod
 
 from pipeline.modeling import ModelManager
 
 
-class WeightsUpdater:
+class WeightsUpdater(ABC):
     def __init__(self, lr=2e-5, weight_decay=1e-2, accum_iters=1, warmup=0, lr_end=1e-7,
-                 use_amp=False, lr_head=None, criterion=nn.CrossEntropyLoss(), optimizer_class=optim.AdamW):
+                 use_amp=False, lr_head=None, optimizer_class=optim.AdamW):
 
         self.lr = lr
         if lr_head is None:
@@ -22,7 +23,6 @@ class WeightsUpdater:
         self.warmup = warmup
         self.lr_end = lr_end
         self.use_amp = use_amp
-        self.criterion = criterion
         self.optimizer_class = optimizer_class
 
         # attention
@@ -64,10 +64,13 @@ class WeightsUpdater:
     def _calc_loss(self, manager: ModelManager, inputs, labels) -> torch.Tensor:
         with amp.autocast(enabled=self.use_amp):
             preds, labels = manager.preproc_forward(inputs, labels)
-            # print("preds", preds)
-            loss = self.criterion(preds.view(-1, 2), labels.view(-1).long())
+            loss = self.get_loss(preds, labels)
         loss = loss / self.accum_iters
         return loss
+
+    @abstractmethod
+    def get_loss(self, preds, labels_after_preproc) -> torch.Tensor:
+        ...
 
     def _backward_loss(self, loss: torch.Tensor):
         if self.use_amp:

@@ -15,6 +15,7 @@ class ModelWithTransformer(nn.Module, ABC):
         self.mname = transformer_name
         self.pretrain_path = pretrain_path
         self.transformer = self._load_transformer()
+        self.transf_out_size = self._extract_transf_out_size(self.transformer)
         self.to(device)
 
     def reset_weights(self) -> None:
@@ -40,11 +41,14 @@ class ModelWithTransformer(nn.Module, ABC):
             bert.bert = bert_lm.bert
             return bert
 
-    def get_transformer_out_size(self, transformer: transformers.PreTrainedModel) -> int:
-        """To create head of model we need to know output shape of transformer that's dependent on
-        transformer that is being used. If it's"""
+    def _extract_transf_out_size(self, transformer: transformers.PreTrainedModel) -> int:
         config = transformer.config.to_dict()
         return config["hidden_size"]
+
+    def get_transformer_out_size(self):
+        """To create head of model we need to know output shape of transformer that's dependent on
+        transformer that is being used. If it's"""
+        return self.transf_out_size
 
     def get_transformer(self) -> transformers.PreTrainedModel:
         return self.transformer

@@ -2,12 +2,12 @@ from typing import List, Any, Optional, Tuple
 from torch.utils.data import DataLoader
 import numpy as np
 
-from .base_pseudo_labeler import BasePseudoLabeler
+from pipeline.pseudo_labeling import BasePseudoLabeler
 from ..data.dataset_types import RucosSampleFeatures, RucosSample
 
 
 class RegressionPseudoLabeler(BasePseudoLabeler):
-    def __init__(self, chosen_proportion: Optional[float] = 0.2, pos_to_neg_proportion: Optional[float] = 1,
+    def __init__(self, predictor, chosen_proportion: Optional[float] = 0.2, pos_to_neg_proportion: Optional[float] = 1,
                  neg_thresh: Optional[float] = None, pos_thresh: Optional[float] = None):
         self._validate_betw_0_1(chosen_proportion)
         self._validate_betw_0_1(pos_to_neg_proportion)
@@ -21,13 +21,14 @@ class RegressionPseudoLabeler(BasePseudoLabeler):
         self.pos_to_neg_ratio = pos_to_neg_proportion
         self.neg_thresh = neg_thresh
         self.pos_thresh = pos_thresh
+        super().__init__(predictor)
 
     def _validate_betw_0_1(self, proportion):
         if proportion is not None:
             if proportion > 1 or proportion < 0:
                 raise ValueError("Proportion should be between 0 and 1")
 
-    def get_chosen_samples_idxs_and_labels(self, predictions: List[Any]) -> Tuple[List[int], List[Any]]:
+    def get_chosen_samples_idxs_and_labels(self, predictions: List[float]) -> Tuple[List[int], List[Any]]:
         # TODO: refactor
         if self.chosen_proportion is not None:
             number_of_preds_to_choose = len(predictions) * self.chosen_proportion

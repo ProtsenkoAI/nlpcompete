@@ -17,7 +17,7 @@ class BaseProcessor(ABC):
         return raw_model_out.squeeze(dim=-1)  # TODO: move to subtypes
 
     @abstractmethod
-    def postprocess(self, model_out, features):
+    def postprocess(self, model_out, features, **kwargs):
         ...
 
     @abstractmethod

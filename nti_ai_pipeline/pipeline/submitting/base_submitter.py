@@ -8,6 +8,7 @@ from .. import util
 
 
 class Submitter(ABC):
+    # TODO: have to use data_predictor here (!)
     SubmObj = Any
     SamplePrediction = Any
 

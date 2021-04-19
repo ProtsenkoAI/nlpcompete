@@ -37,7 +37,7 @@ class SentPairBinaryClassifier(ModelWithTransformer):
                 "droprate": self.droprate,
                 "head_nlayers": self.head_nlayers,
                 "head_nneurons": self.head_nneurons,
-                "transformer_weights_path": self.transformer_weights_path,
+                    "transformer_weights_path": self.transformer_weights_path,
                 "use_ner": self.use_ner,
                 "ner_out_len": self.ner_out_len,
                 }
@@ -63,7 +63,7 @@ class SentPairBinaryClassifier(ModelWithTransformer):
 
     def _create_head(self, droprate: float, n_layers: int, head_nneurons: int) -> nn.Module:
         # TODO: refactor creating head and maybe push something to base_model (or other base class)
-        transformer_out_size = self.get_transformer_out_size(self.transformer)
+        transformer_out_size = self.get_transformer_out_size()
         layers = []
         if self.use_hidden_pooling:
             layers.append(nn.AdaptiveAvgPool2d(output_size=(1, transformer_out_size)))

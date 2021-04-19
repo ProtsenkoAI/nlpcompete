@@ -4,11 +4,12 @@ from .base_processor import BaseProcessor
 from ..saving.model_and_processor_saver import ModelAndProcessorSaver
 from .model_with_transformer import ModelWithTransformer
 
-from typing import Union, Tuple
+from typing import Union, Tuple, Optional
 from .types import ModelPreds, ProcLabels
 
 
 class ModelManager:
+    # TODO: refactor problems with returning probs from postproc (and parameterising it)
     r"""
     Combines a torch model with a processor to provide functionality used by any other components.
     Model and processor shouldn't be used by themselves, without manager (except some torch-related
@@ -49,15 +50,17 @@ class ModelManager:
             return preds, out.labels
         return preds
 
-    def predict_postproc(self, features):
+    def predict_postproc(self, features, postproc_kwargs: Optional[dict] = None):
         r"""
         Takes features, returns postprocessed model predictions.
         """
+        if postproc_kwargs is None:
+            postproc_kwargs = {}
         # TODO: wtf? why features aren't batched (size=(8, ...))?
         text1, text2, question_idx, start, end, placeholder = features
         out = self.preproc_forward(features=(text1, text2, placeholder))
         preds = out
-        postproc_preds = self.processor.postprocess(preds, features)
+        postproc_preds = self.processor.postprocess(preds, features, **postproc_kwargs)
         return postproc_preds
 
     def save_model(self) -> str:

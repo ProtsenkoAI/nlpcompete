@@ -15,11 +15,11 @@ class BaseContainer:
 
     def get_data(self, start_row: int = 0, nrows: Optional[int] = None,
                  subset_idxs: Optional[Iterable[int]] = None) -> Samples:
-        if not nrows is None:
+        if nrows is not None:
             end_row = start_row + nrows
             return self.data[start_row:end_row]
 
-        elif not subset_idxs is None:
+        elif subset_idxs is not None:
             subset = [elem for idx, elem in enumerate(self.data) if idx in subset_idxs and idx >= start_row]
             return subset
 

@@ -48,7 +48,7 @@ class RucosProcessor(BaseProcessor):
             return BatchWithLabels(features, labels_proc)
         return BatchWithoutLabels(features)
 
-    def postprocess(self, preds: ModelPreds, src_features: UnprocSubmFeatures) -> ProcSubmPreds:
+    def postprocess(self, preds: ModelPreds, src_features: UnprocSubmFeatures, **kwargs) -> ProcSubmPreds:
         text1, text2, text_ids, starts, ends, placeholders = src_features
         probs = preds.squeeze().cpu().detach().numpy()
         out = []

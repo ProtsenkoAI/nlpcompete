@@ -1,15 +1,14 @@
 from typing import List
 
-
-from nti_squad.data.contain import QADataContainer
+from pipeline.data.base_dataset import BaseDataset
 from .types_parsed import ParsedParagraph
 from .types_dataset import SampleWithId, SampleFeaturesWithId
 
 
-class SubmDataset:
-    def __init__(self, container: QADataContainer):
-        data = container.get_data()
+class SubmDataset(BaseDataset):
+    def __init__(self, data: List[ParsedParagraph]):
         self.samples = self._get_samples(data)
+        super().__init__(self.samples)
 
     def _get_samples(self, data: List[ParsedParagraph]) -> List[SampleWithId]:
         samples = []

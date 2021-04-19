@@ -1,17 +1,16 @@
-from torch.utils import data as torch_data
 from typing import List, Union, Dict
 
-from pipeline.data.base_container import BaseContainer
+from pipeline.data.base_dataset import BaseDataset
 from .types_parsed import ParsedParagraph
-from .types_dataset import SampleWithAnswers, SampleFeatures, SampleFeaturesWithAnswers
+from .types_dataset import SampleWithAnswers, SampleFeatures, SampleFeaturesWithAnswers, SamplesWithAnswers
 
 
-class SQuADDataset(torch_data.Dataset):
-    def __init__(self, container: BaseContainer):
-        data = container.get_data()
-        self.samples = self._get_samples(data)
+class SQuADDataset(BaseDataset):
+    def __init__(self, samples_raw: List[ParsedParagraph]):
+        self.samples = self._get_samples(samples_raw)
+        super().__init__(samples_raw)
 
-    def _get_samples(self, data: List[ParsedParagraph]) -> List[SampleWithAnswers]:
+    def _get_samples(self, data: List[ParsedParagraph]) -> SamplesWithAnswers:
         samples: List[SampleWithAnswers] = []
         for text, questions in data:
             for question, question_data in questions:
@@ -34,6 +33,3 @@ class SQuADDataset(torch_data.Dataset):
         features = SampleFeatures(text=sample["text"], question=sample["question"])
         answer_start_end = sample["answer_start"], sample["answer_end"]
         return SampleFeaturesWithAnswers(features, answer_start_end)
-
-    def __len__(self) -> int:
-        return len(self.samples)

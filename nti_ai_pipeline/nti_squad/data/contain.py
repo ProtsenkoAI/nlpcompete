@@ -1,8 +1,8 @@
 from typing import List
 
 from pipeline.data import BaseContainer
-from legacy.data.types.raw import TrainQuestion, TrainAnswer
-from legacy.data.types.parsed import ParsedAnswer, ParsedQuestionAnswers, ParsedParagraph
+from .types_raw import TrainQuestion, TrainAnswer
+from .types_parsed import ParsedAnswer, ParsedQuestionAnswers, ParsedParagraph
 
 import json
 
