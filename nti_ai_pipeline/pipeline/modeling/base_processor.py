@@ -17,6 +17,13 @@ class BaseProcessor(ABC):
         return raw_model_out.squeeze(dim=-1)  # TODO: move to subtypes
 
     @abstractmethod
+    def prepare_to_preproc_forward(self, raw_features):
+        # TODO: eliminate this method.
+        #  it's bad practice: trainer/DataPredictor should prepare data from raw type (like SubmSample) to type
+        #   appropriate for processor and manager
+        ...
+
+    @abstractmethod
     def postprocess(self, model_out, features, **kwargs):
         ...
 

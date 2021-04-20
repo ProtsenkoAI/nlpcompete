@@ -68,11 +68,17 @@ class QAProcAssistant:
 
     def fill_zeros_out_of_context(self, predictions, tokenized):
         start_preds, end_preds = predictions
+        # start_preds = self._to_numpy(start_preds)
+        # end_preds = self._to_numpy(end_preds)
+
         for text_idx, text_token_types in enumerate(tokenized["token_type_ids"]):
             question_start_idx = list(text_token_types).index(1)
             start_preds[text_idx, question_start_idx:] = 0
             end_preds[text_idx, question_start_idx:] = 0
         return start_preds, end_preds
+
+    def _to_numpy(self, tensor: torch.Tensor) -> np.array:
+        return tensor.detach().numpy()
 
     def filter_samples(self, tokenized, labels, other_arrays=()):
         """

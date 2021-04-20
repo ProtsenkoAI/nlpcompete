@@ -4,8 +4,9 @@ from typing import Union
 from .qa_proc_assistant import QAProcAssistant
 from pipeline.modeling import BaseProcessor
 from pipeline.modeling.types import BatchWithLabels, BatchWithoutLabels
-from .types import UnprocLabels, UnprocFeatures, ProcLabels, TrueTokenIdxs, SubmSamplePredWithProbs,\
-    SubmBatchPredWithProbs, SubmBatchPred
+from .types import UnprocLabels, UnprocFeatures, ProcLabels, TrueTokenIdxs, SubmSamplePredWithProbsAndStartEnds,\
+    SubmBatchPredWithProbsAndStartEnds, SubmBatchPred
+from ..data.types_dataset import SampleFeaturesWithId
 
 
 class QADataProcessor(BaseProcessor):
@@ -38,24 +39,34 @@ class QADataProcessor(BaseProcessor):
         end_logits = end_logits.squeeze(-1)
         return start_logits, end_logits
 
-    def postprocess(self, preds, src_features, src_labels=None, return_probs=False) -> Union[SubmBatchPredWithProbs, SubmBatchPred]:
-        # TODO: new-style processor should return list of samples
+    def prepare_to_preproc_forward(self, features: SampleFeaturesWithId) -> UnprocFeatures:
+        return features
+        # question_id, text, question = features
+        # return UnprocFeatures(text=text, question=question)
+
+    def postprocess(self, preds, src_features, src_labels=None, return_probs_and_start_ends=False
+                    ) -> Union[SubmBatchPredWithProbsAndStartEnds, SubmBatchPred]:
+        # TODO: new-style processor should return list of samples (and maybe get them from input)
+        # quest_id, src_texts, src_questions = src_features
         src_texts, src_questions = src_features
         tokenized = self.proc_assistant.tokenize(src_texts, src_questions)
         if src_labels is not None:
             tokenized, src_labels, (src_texts,) = self.proc_assistant.filter_samples(tokenized, src_labels, [src_texts])
+
         preds = self.proc_assistant.fill_zeros_out_of_context(preds, tokenized)
         start_logits, end_logits = preds
         out = self.proc_assistant.get_best_preds_starts_ends(start_logits, end_logits,
-                                                             return_probs=return_probs)
-        if return_probs:
+                                                             return_probs=return_probs_and_start_ends)
+        if return_probs_and_start_ends:
             (best_start_idxs, best_end_idxs), best_probs = out
         else:
             best_start_idxs, best_end_idxs = out
         final_pred = self.proc_assistant.text_from_token_idxs(best_start_idxs, best_end_idxs, src_texts, tokenized)
-        if return_probs:
+        if return_probs_and_start_ends:
             # final_pred = SubmPredWithProbs(final_pred, best_probs)
-            final_pred = [SubmSamplePredWithProbs(pred_text, prob) for pred_text, prob in zip(final_pred, best_probs)]
+            final_pred = [SubmSamplePredWithProbsAndStartEnds(prob, answer_start, answer_end, pred_text) for
+                          pred_text, answer_start, answer_end, prob in
+                          zip(final_pred, best_start_idxs, best_end_idxs, best_probs)]
         else:
             final_pred = [pred_text for pred_text in final_pred]
 
@@ -64,7 +75,7 @@ class QADataProcessor(BaseProcessor):
             ground_truth_text = self.proc_assistant.crop_text_by_idxs(src_texts, start_idxs, end_idxs)
             # return BatchWithLabels(final_pred, ground_truth_text)
             return list(zip(final_pred, ground_truth_text))
-        return BatchWithoutLabels(final_pred)
+        return final_pred
 
     def _preproc_labels(self, labels: TrueTokenIdxs, device) -> ProcLabels:
         labels_proc = self.proc_assistant.create_tensors(labels, device)

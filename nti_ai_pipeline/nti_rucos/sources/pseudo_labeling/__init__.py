@@ -1,1 +1,2 @@
 from .regression_pseudo_labeler import RegressionPseudoLabeler
+from .probs_data_predictor import ProbsDataPredictor

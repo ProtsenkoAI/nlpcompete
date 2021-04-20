@@ -2,14 +2,14 @@ from abc import ABC, abstractmethod
 from typing import List, Any, Tuple
 from torch.utils.data import DataLoader
 
-from ..ensembling.data_predictor import DataPredictor  # TODO: move predictor to another place
+from ..data_predictors.data_predictor import DataPredictor  # TODO: move predictor to another place
 
 
 class BasePseudoLabeler(ABC):
     # TODO: move to pipeline
     SampleFeatures = Any
 
-    def __init__(self, predictor):
+    def __init__(self, predictor: DataPredictor):
         self.predictor = predictor
 
     def run(self, model_manager, data_loader):

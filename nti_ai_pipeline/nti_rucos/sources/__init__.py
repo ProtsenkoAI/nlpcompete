@@ -6,3 +6,4 @@ from . import evaluating
 from . import rucos_submitting
 from . import pseudo_labeling
 from . import pretraining
+from . import rucos_weights_updater

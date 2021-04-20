@@ -22,7 +22,7 @@ class SubmDataset(BaseDataset):
 
     def __getitem__(self, idx: int) -> SampleFeaturesWithId:
         features = self.samples[idx]
-        return SampleFeaturesWithId(features["id"], features["text"], features["question"])
+        return SampleFeaturesWithId(id=features["id"], text=features["text"], question=features["question"])
 
     def __len__(self):
         return len(self.samples)

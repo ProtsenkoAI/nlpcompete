@@ -4,7 +4,7 @@ from .base_processor import BaseProcessor
 from ..saving.model_and_processor_saver import ModelAndProcessorSaver
 from .model_with_transformer import ModelWithTransformer
 
-from typing import Union, Tuple, Optional
+from typing import Union, Tuple, Optional, List, Any
 from .types import ModelPreds, ProcLabels
 
 
@@ -50,15 +50,14 @@ class ModelManager:
             return preds, out.labels
         return preds
 
-    def predict_postproc(self, features, postproc_kwargs: Optional[dict] = None):
+    def predict_postproc(self, features, postproc_kwargs: Optional[dict] = None) -> List[Any]:
         r"""
         Takes features, returns postprocessed model predictions.
         """
         if postproc_kwargs is None:
             postproc_kwargs = {}
-        # TODO: wtf? why features aren't batched (size=(8, ...))?
-        text1, text2, question_idx, start, end, placeholder = features
-        out = self.preproc_forward(features=(text1, text2, placeholder))
+        features_to_preproc_and_forward = self.processor.prepare_to_preproc_forward(features)
+        out = self.preproc_forward(features=features_to_preproc_and_forward)
         preds = out
         postproc_preds = self.processor.postprocess(preds, features, **postproc_kwargs)
         return postproc_preds
