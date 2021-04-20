@@ -1,13 +1,29 @@
-# nti-ai-pipeline
-## Team: <̷͊s̸̕o̵͒s̶̈́>̶̀, Authors: [Georgii Surkov](https://github.com/GeorgiySurkov) and [Protsenko Arseny](https://github.com/ProtsenkoAI)
+### NLPCompete
+NLPC is a project with NLP competitions solutions, and a pipeline
+that's being used by all of them.
 
-Наше решение, которое дало скор 0.8053 на public было blending'ом трёх бертов, обученных на kfold из train-части датасета. 
-Основные моменты решения:
-1. Конкатенируем ключевое слово (скрытое под @placeholder) с query, в BERT подаём два текста: main_token + query и текст новости
-2. Иногда в train правильные ответы есть в разметке, но их нет в entities: мы добавляем их на этапе зарузки данных (весь препроцессинг 
-  распределён по модулям rucos_contain, rucos_train_dataset и rucos_processor). Мы также извлекаем NER-вероятности с помощью deeppavlov ner-ru-bert, 
-3. Выход NER и CLS-token из BERT конкатенируются и подаются в head - 1 или 2 линейных слоя
-4. Для обучения используются lr_sceduler, amp
-5. Из каждого текста мы извлекаем entity как отдельный объект и проводит бинарную классификацию. В submission попадает entity с максимальной вероятностью 
-  (см реализацию rucos_submitting.py)
-6. Код обучения bert можно найти в research/ProtsenkoAISol.ipynb, формирование блендинга - в research/EnsemblingProtsenkoAI.ipynb
+### Solutions of competitions
+You can find .ipynb files in notebooks/
+
+At the moment we have solutions of:
+1. [SberQuAD](https://arxiv.org/abs/1912.09723)
+2. [RuCoS](https://russiansuperglue.com/tasks/task_info/RuCoS)
+
+### Main components of pipeline:
+1. Plenty of useful interfaces based on clean architecture principles, for example:
+   1. ModelWithTransformer - to easily load weights from pretrain file
+   or HuggingFace servers, reset weights etc.
+   2. PseudoLabeler: to easily predict test data and add pseudo labels
+   to train set
+   3. Container - to download data and pass them to Datasets
+   4. Submitter - to make a submission in one line of code
+   5. DataProcessor
+   6. Others
+2. Convenient components to train and use model:
+   1. Trainer: supports checkpoints, evaluations, progress bars
+   2. WeightsUpdater: update weights with a built-in GradScaler, amp etc.
+   3. ModelManager: object composed of torch model and data processor
+   makes fitting, submitting and any other operations agnostic to many
+   pytorch features.
+   4. Others
+

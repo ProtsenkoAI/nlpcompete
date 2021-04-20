@@ -1,19 +1,19 @@
-from nti_ai_pipeline.pipeline import Trainer
-from nti_ai_pipeline.pipeline import QAPipeline
-from nti_ai_pipeline.pipeline.model_selection.cross_val import CrossValidator
+from sources.pipeline import Trainer
+from sources.pipeline import QAPipeline
+from sources.pipeline.model_selection.cross_val import CrossValidator
 # from model_level.models.transformer_qanda import TransformerQA
 from legacy.model_level.models import SentPairBinaryClassifier
 from legacy.model_level import Validator
-from nti_ai_pipeline.pipeline import ModelManager
-from nti_ai_pipeline.pipeline import BlendingModelManager
-from nti_ai_pipeline.pipeline import UnbatchingProcessor
+from sources.pipeline import ModelManager
+from sources.pipeline import BlendingModelManager
+from sources.pipeline import UnbatchingProcessor
 from legacy.model_level.updating_weights.qa_weights_updater import QAWeightsUpdater
 from legacy.data import DataContainer
 from legacy.data import DataLoaderSepPartsBuilder
 from legacy.data import StandardDataset, SubmDataset
 from legacy.data import DataAssistant
 from legacy.model_level import RucosProcessor
-from nti_ai_pipeline.pipeline.saving import LocalSaver
+from sources.pipeline.saving import LocalSaver
 from .config import TestsConfig
 
 import torch

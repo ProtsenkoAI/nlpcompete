@@ -1,7 +1,7 @@
 import unittest
 import torch
 
-from nti_ai_pipeline.pipeline.modeling import ModelManager
+from sources.pipeline.modeling import ModelManager
 from tests.helpers import config, std_objects, weights_helpers
 
 config = config.TestsConfig()

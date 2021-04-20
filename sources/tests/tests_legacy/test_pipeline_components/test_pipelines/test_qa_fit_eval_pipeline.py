@@ -1,6 +1,6 @@
 import unittest
 
-from nti_ai_pipeline.pipeline import QATrainEvalPipeline
+from sources.pipeline import QATrainEvalPipeline
 
 from tests.helpers import config
 
